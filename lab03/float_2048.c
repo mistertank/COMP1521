@@ -7,11 +7,11 @@
 
 #include "floats.h"
 
-uint32_t components_to_uint32(float_components_t bits) {
+uint32_t components_to_bits(float_components_t bits) {
     uint32_t result = 0;
-    result += bits.sign << 31;
-    result += bits.exponent << 23;
-    result += bits.fraction;
+    result += (bits.sign & 1) << 31;
+    result += (bits.exponent & 0xFF) << 23;
+    result += (bits.fraction & 0x7FFFFF);
     return result;
 }
 
@@ -47,6 +47,6 @@ uint32_t float_2048(uint32_t f) {
         }
     }
 
-    return components_to_uint32(bits);
+    return components_to_bits(bits);
 }
 
