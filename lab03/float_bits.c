@@ -26,7 +26,7 @@ float_components_t float_bits(uint32_t f) {
 // given the 3 components of a float
 // return 1 if it is NaN, 0 otherwise
 int is_nan(float_components_t f) {
-    return f.sign == 0 && f.exponent == 0xFF && f.fraction != 0;
+    return f.exponent == 0xFF && f.fraction != 0;
 }
 
 // given the 3 components of a float
