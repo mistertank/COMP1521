@@ -19,6 +19,14 @@
 //
 uint32_t float_2048(uint32_t f) {
     // PUT YOUR CODE HERE
+    float_components_t bits = float_bits(f);
+
+    if (
+        is_nan(bits)
+        || is_negative_infinity(bits)
+        || is_positive_infinity(bits)
+        || is_zero(bits)
+    ) return f;
 
     return 42;
 }
