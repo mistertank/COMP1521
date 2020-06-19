@@ -40,13 +40,11 @@ uint32_t float_2048(uint32_t f) {
     bits.exponent = bits.exponent + 11;
 
     if (bits.exponent > 0xFF) {
-        union overlay output;
         if (bits.sign == 0) {
-            output.f = atof("inf");
+            return 0x7f800000; // inf
         } else {
-            output.f = atof("-inf");
+            return 0xff800000; // -inf
         }
-        return output.u;
     }
 
     return components_to_uint32(bits);
