@@ -6,4 +6,4 @@ main:
 
     .data
 pun:
-    .asciiz "I love MIPS\n"
+    .asciiz "I MIPS you!\n"
