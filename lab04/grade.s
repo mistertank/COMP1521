@@ -9,24 +9,20 @@ main:
     syscall
     move $t0, $v0
 
-    li $t1, 50
-    blt $t0, $t1, handle_fl
+    blt $t0, 50, handle_fl
 
-    li $t1, 65
-    blt $t0, $t1, handle_ps
+    blt $t0, 65, handle_ps
 
-    li $t1, 75
-    blt $t0, $t1, handle_cr
+    blt $t0, 75, handle_cr
 
-    li $t1, 85
-    blt $t0, $t1, handle_dn
+    blt $t0, 85, handle_dn
 
     b handle_hd
     b end
 
 
 handle_fl:
-    la $a0, fl          # printf("FL\n");
+    la $a0, fl
     li $v0, 4
     syscall
 
