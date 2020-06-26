@@ -13,7 +13,7 @@ main:                           # int main(void)
     b loop_start
 
 loop_start:
-    bgt $t0, $s0, end   # while (t0 <= s0)
+    bge $t0, $s0, end   # while (t0 <= s0)
 
     rem $t1, $t0, 7
     beqz $t1 print_num
