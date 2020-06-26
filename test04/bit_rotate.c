@@ -4,7 +4,7 @@
 uint16_t bit_rotate(int n_rotations, uint16_t bits) {
     if (n_rotations >= 0) {
         n_rotations %= 16;
-        return (bits << n_rotations) + (bits >> n_rotations);
+        return (bits << n_rotations) + (bits >> (16 - n_rotations));
     }
 
     n_rotations = (-n_rotations) % 16;
