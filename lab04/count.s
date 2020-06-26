@@ -19,7 +19,7 @@ loop:
     li  $v0, 1
     syscall
 
-    li $a0, 0xa
+    li $a0, 0xa         # use ascii code for special characters
     # li   $a0, '\n'
     li   $v0, 11
     syscall

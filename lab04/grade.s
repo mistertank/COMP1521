@@ -57,6 +57,7 @@ handle_hd:
     b end
 
 end:
+    li $v0, 0
     jr $ra
 
     .data
