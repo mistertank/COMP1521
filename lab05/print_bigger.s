@@ -35,7 +35,7 @@ loop1:
     add $t3, $t1, $t2   #
 
     lw $a0, ($t3)       #   load numbers[i] into $a0
-    blt $a0, $t7, loop1_mid # if (numbers[i] < last_numer) goto loop1_mid
+    blt $a0, $t7, loop1_mid # if (numbers[i] < last_number) goto loop1_mid
     li $v0, 1           #   printf("%d", numbers[i])
     syscall
 
