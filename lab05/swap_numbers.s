@@ -23,11 +23,32 @@ loop0:
     b loop0             # }
 end0:
 
+    li $t0, 1           # i = 1;
 
-    # PUT YOUR CODE HERE
+loop2:
+    bge $t0, 10, end2
 
+    mul $t1, $t0, 4     # calculate numbers[i]
+    la $t2, numbers
+    add $t3, $t1, $t2
+    lw $t4, ($t3)       # x = numbers[i]
+
+    addi $t5, $t3, -4   # calculate numbers[i - 1]
+    lw $t6, ($t5)       # y = numbers[i - 1]
+
+    bge $t4, $t6, loop2_end  # if (x >= y) goto loop1_end;
+
+    sw $t4, ($t5)       # numbers[i - 1] = x
+    sw $t6, ($t3)       # numbers[i] = y
+
+loop2_end:
+    add $t0, $t0, 1
+    b loop2
+
+end2:
 
     li $t0, 0           # i = 0
+
 loop1:
     bge $t0, 10, end1   # while (i < 10) {
 
@@ -44,6 +65,7 @@ loop1:
 
     add $t0, $t0, 1     #   i++
     b loop1             # }
+
 end1:
 
     jr $31              # return
