@@ -41,46 +41,200 @@ error_n_generations:    .asciiz "Invalid number of generations\n"
 
     .text
 
-    #
-    # REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-    # `main', AND THE PURPOSES THEY ARE ARE USED FOR
-    #
-    # YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-    # ORIGINAL VALUE WHEN `run_generation' FINISHES
-    #
+###########################################################################
+# main
+#
+# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
+# `main', AND THE PURPOSES THEY ARE ARE USED FOR
+#
+# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
+# ORIGINAL VALUE WHEN `run_generation' FINISHES
+#
+# local variables:
+# $s0   world_size
+# $s1   rule
+# $s2   n_generations
+# $s3   reverse
+# $s4   g
 
 main:
-    #
-    # REPLACE THIS COMMENT WITH YOUR CODE FOR `main'.
-    #
+    sub     $sp, $sp, 4                     # save $ra on the stack
+    sw      $ra, ($sp)
 
+    #######################
+    # Get params from stdin
 
-    # replace the syscall below with
-    #
-    # li    $v0, 0
-    # jr    $ra
-    #
-    # if your code for `main' preserves $ra by saving it on the
-    # stack, and restoring it after calling `print_world' and
-    # `run_generation'.  [ there are style marks for this ]
-
-    li  $v0, 10
+    # get world size
+    la      $a0, prompt_world_size          # printf("Enter world size: ");
+    li      $v0, 4
     syscall
 
+    li      $v0, 5                          # scanf("%d", world_size);
+    syscall
+    move    $s0, $v0
+
+    # if (rule < MIN_WORLD_SIZE) goto main_err_world_size;
+    blt     $s0, MIN_WORLD_SIZE, main_err_world_size
+    # if (rule < MAX_WORLD_SIZE) goto main_err_world_size;
+    bgt     $s0, MAX_WORLD_SIZE, main_err_world_size
+
+    # get rule
+    la      $a0, prompt_rule                # printf("Enter rule: ");
+    li      $v0, 4
+    syscall
+
+    li      $v0, 5                          # scanf("%d", rule);
+    syscall
+    move    $s1, $v0
+
+    # if (rule < MIN_RULE) goto main_err_rule;
+    blt     $s1, MIN_RULE, main_err_rule
+    # if (rule < MAX_RULE) goto main_err_rule;
+    bgt     $s1, MAX_RULE, main_err_rule
+
+    # get number of generations
+    la      $a0, prompt_n_generations       # printf("Enter how many generations: ");
+    li      $v0, 4
+    syscall
+
+    li      $v0, 5                          # scanf("%d", n_generations);
+    syscall
+    move    $s2, $v0
+
+    li      $a0, '\n'                       # putchar('\n');
+    li      $v0, 11
+    syscall
+
+    # if (n_generations < MIN_GENERATIONS) goto main_err_generations;
+    blt     $s2, MIN_GENERATIONS, main_err_generations
+    # if (n_generations > MAX_GENERATIONS) goto main_err_generations;
+    bgt     $s2, MAX_GENERATIONS, main_err_generations
+
+    # Handle negative generations
+    li      $s3, 0                          # int reverse = 0;
+main_if_reverse_cond:
+    bgez    $s2, main_if_reverse_false      # if (n_generations < 0)
+
+    li      $s3, 1                          # reverse = 1:
+    mul     $s2, $s2, -1                    # n_generations = -n_generations:
+
+main_if_reverse_false:
+
+    # Set middle cell in first generation to alive
+    div     $t0, $s0, 2                     # t0 = world_size / 2;
+    li      $t1, 1                          # t1 = 1;
+    sb      $t1, cells($t0)                 # cells[0][t0] = t1;
+
+    # move    $a0, $s0                        # print_generation(world_size, 1)
+    # li      $a1, 0
+    # jal     print_generation
+
+    #################
+    # Run generations
+
+    li      $s4, 1                          # g = 1
+main_run_loop:
+    bgt     $s4, $s2, main_run_end          # while (g <= n_generations) {
+
+    move    $a0, $s0                        # run_generation(world_size,
+    move    $a1, $s4                        #                g,
+    move    $a2, $s1                        #                rule)
+    jal run_generation
+
+    addi    $s4, $s4, 1                     # g++
+    b       main_run_loop                   # }
+
+main_run_end:
+
+    ###################
+    # Print generations
+
+    bne     $s3, 1, main_print_normal       # if (!reverse) goto main_print_normal
+main_print_reverse:
+    move    $s4, $s2                        # g = n_generations;
+main_print_reverse_loop:
+    blt     $s4, 0, main_print_reverse_end  # while (g >= 0) {
+
+    move    $a0, $s0                        #   print_generation(world_size, g);
+    move    $a1, $s4
+    jal     print_generation
+
+    sub     $s4, $s4, 1                     #   g--;
+    b       main_print_reverse_loop
+main_print_reverse_end:
+    b       main_print_end                  # }
+
+main_print_normal:
+    li      $s4, 0                          # g = 0;
+main_print_normal_loop:
+    bgt     $s4, $s2, main_print_normal_end # while (g <= n_generations) {
+
+    move    $a0, $s0                        #   print_generation(world_size, g);
+    move    $a1, $s4
+    jal     print_generation
+
+    add     $s4, $s4, 1                     #   g++;
+    b       main_print_normal_loop
+main_print_normal_end:
+    b       main_print_end                  # }
+main_print_end:
+
+main_exit_normal:
+    lw      $ra, ($sp)                      # restore $ra from the stack
+    add     $sp, $sp, 4
+    li      $v0, 0
+    jr      $ra
+
+    ###################
+    # Error exit labels
+
+main_err_world_size:
+    la      $a0, error_world_size
+    li      $v0, 4
+    syscall
+    b       main_exit_err
+
+main_err_rule:
+    la      $a0, error_rule
+    li      $v0, 4
+    syscall
+    b       main_exit_err
+
+main_err_generations:
+    la      $a0, error_n_generations
+    li      $v0, 4
+    syscall
+    b       main_exit_err
+
+main_exit_err:
+    li      $v0, 1
+    jr      $ra
 
 
-    #
-    # Given `world_size', `which_generation', and `rule', calculate
-    # a new generation according to `rule' and store it in `cells'.
-    #
-
-    #
-    # REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-    # `run_generation', AND THE PURPOSES THEY ARE ARE USED FOR
-    #
-    # YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-    # ORIGINAL VALUE WHEN `run_generation' FINISHES
-    #
+###########################################################################
+# run_generation
+#
+# Given `world_size', `which_generation', and `rule', calculate
+# a new generation according to `rule' and store it in `cells'.
+#
+# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
+# `run_generation', AND THE PURPOSES THEY ARE ARE USED FOR
+#
+# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
+# ORIGINAL VALUE WHEN `run_generation' FINISHES
+#
+# arguments:
+# #a0   world_size
+# #a1   which_generation
+# #a2   rule
+#
+# local variables:
+# $s0   x
+# $s1   left
+# $s2   right
+# $s3   state
+# $s4   bit
+# $s5   set
 
 run_generation:
 
@@ -91,23 +245,121 @@ run_generation:
     jr  $ra
 
 
-    #
-    # Given `world_size', and `which_generation', print out the
-    # specified generation.
-    #
-
-    #
-    # REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-    # `print_generation', AND THE PURPOSES THEY ARE ARE USED FOR
-    #
-    # YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-    # ORIGINAL VALUE WHEN `print_generation' FINISHES
-    #
+###########################################################################
+# print_generation
+#
+# Given `world_size', and `which_generation', print out the
+# specified generation.
+#
+# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
+# `print_generation', AND THE PURPOSES THEY ARE ARE USED FOR
+#
+# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
+# ORIGINAL VALUE WHEN `print_generation' FINISHES
+#
+# arguments:
+# #a0   world_size
+# #a1   which_generation
+#
+# local variables:
+# $s0   world_size
+# $s1   which_generation
+# $t0   x
 
 print_generation:
+print_generation_prologue:
+    sub     $sp, $sp, 8
+    sw      $s1, 4($sp)
+    sw      $s0, 0($sp)
 
-    #
-    # REPLACE THIS COMMENT WITH YOUR CODE FOR `print_generation'.
-    #
+    move    $s0, $a0                        # Copy arguments so I can use syscalls
+    move    $s1, $a1
+
+    # Show generation number
+    move    $a0, $s1                        # printf("%d", which_generation);
+    li      $v0, 1
+    syscall
+
+    li      $a0, '\t'                       # putchar('\t')
+    li      $v0, 11
+    syscall
+
+    li      $t0, 0                          # x = 0;
+print_generation_loop:
+    bge     $t0, $s0, print_generation_end  # while (x < world_size)
+
+    # Calculate index
+    mul     $t1, $s1, $s0                   # calculate cells[which_generation]
+    add     $t1, $t1, $t0                   # calculate &cells[which_generation][x]
+    lb      $t2, cells($t0)                 # t2 = cells[which_generation][x]
+
+print_generation_is_alive_cond:
+    bne     $t2, 1, print_generation_is_alive_false
+
+    li      $a0, ALIVE_CHAR                 # putchar(ALIVE_CHAR)
+    li      $v0, 11
+    syscall
+
+print_generation_is_alive_false:
+    li      $a0, DEAD_CHAR                  # putchar(DEAD_CHAR)
+    li      $v0, 11
+    syscall
+
+    add     $t0, $t0, 1
+    b       print_generation_loop
+
+print_generation_end:
+    li      $a0, '\n'                       # putchar('\t')
+    li      $v0, 11
+    syscall
+
+print_generation_epilogue:
+    lw      $s0, 0($sp)
+    lw      $s1, 4($sp)
+    addi    $sp, $sp, 8
 
     jr  $ra
+
+###############################################################################
+# END OF PROGRAM
+###############################################################################
+
+###############################################################################
+# possibly useful stuff
+
+    # # Crappy debug print
+    # li      $a0, 2
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'                       # putchar('\n');
+    # li      $v0, 11
+    # syscall
+
+    # move    $a0, $s0
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'                       # putchar('\n');
+    # li      $v0, 11
+    # syscall
+
+    # move    $a0, $s1
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'                       # putchar('\n');
+    # li      $v0, 11
+    # syscall
+
+    # move    $a0, $s2
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'                       # putchar('\n');
+    # li      $v0, 11
+    # syscall
+
+    # move    $a0, $s3
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'                       # putchar('\n');
+    # li      $v0, 11
+    # syscall
+
