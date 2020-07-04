@@ -86,7 +86,7 @@
 #define MAX_WORLD_SIZE   128
 #define MIN_GENERATIONS -256
 #define MAX_GENERATIONS  256
-#define MIN_RULE           1
+#define MIN_RULE           0
 #define MAX_RULE         255
 
 // characters used to print alive/dead cells
