@@ -44,12 +44,6 @@ error_n_generations:    .asciiz "Invalid number of generations\n"
 ###########################################################################
 # main
 #
-# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-# `main', AND THE PURPOSES THEY ARE ARE USED FOR
-#
-# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-# ORIGINAL VALUE WHEN `run_generation' FINISHES
-#
 # local variables:
 # $s0   world_size
 # $s1   rule
@@ -217,12 +211,6 @@ main_exit_err:
 # Given `world_size', `which_generation', and `rule', calculate
 # a new generation according to `rule' and store it in `cells'.
 #
-# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-# `run_generation', AND THE PURPOSES THEY ARE ARE USED FOR
-#
-# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-# ORIGINAL VALUE WHEN `run_generation' FINISHES
-#
 # arguments:
 # $a0   world_size
 # $a1   which_generation
@@ -261,21 +249,20 @@ run_generation_loop:
     sub     $t1, $t1, 1                     # calculate &cells[which_generation - 1][x - 1]
 
     li      $s0, 0                          # int left = 0;
-    blez    $t0, run_generation_skip_left   # if (x <= 0) goto run_generation_skip_left;
-
+    ble     $t0, 0, run_generation_skip_left# if (x <= 0) goto run_generation_skip_left;
     lb      $s0, cells($t1)                 # left = cells[which_generation - 1][x - 1];
 run_generation_skip_left:
 
-    # Calculate index of center cell
+    # Calculate index of centre cell
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x]
-    lb      $s1, cells($t1)                 # int center = cells[which_generation - 1][x];
+    lb      $s1, cells($t1)                 # int centre = cells[which_generation - 1][x];
 
     # Calculate index of right cell
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x + 1]
 
     li      $s2, 0                          # int right = 0;
     # if (x >= world_size) goto run_generation_skip_right
-    bge     $t0, $a1, run_generation_skip_right
+    bgt     $t0, $a1, run_generation_skip_right
 
     lb      $s2, cells($t1)                 # right = cells[which_generation - 1][x + 1];
 run_generation_skip_right:
@@ -292,27 +279,74 @@ run_generation_skip_right:
     sll     $s4, $t3, $s3                   # bit = 1 << state;
 
     # Check if bit is set in the rule
-    and     $t5, $a2, $s4                   # set = rule & bit;
-
-    move    $t7, $a0
-    move    $a0, $t5
-    li      $v0, 1
-    syscall
-    move    $a0, $t7
+    and     $s5, $a2, $s4                   # set = rule & bit;
 
     # Get index of new cell
     mul     $t1, $a1, $a0                   # calculate cells[which_generation]
     add     $t1, $t1, $t0                   # calculate &cells[which_generation][x]
 
-    bne     $s5, 1, run_generation_set_dead # if (set != 1) goto run_generation_set_dead;
-run_generation_set_alive:
-    li      $t4, 1
-    sb      $t4, cells($t1)                 # cells[which_generation][x] = 1;
-    b       run_generation_step
+    move    $t7, $a0
+    move    $a0, $t0
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s0
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s1
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s2
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s3
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s4
+    li      $v0, 1
+    syscall
+    li      $a0, ' '
+    li      $v0, 11
+    syscall
+    move    $a0, $s5
+    li      $v0, 1
+    syscall
+    li      $a0, '\n'
+    li      $v0, 11
+    syscall
+    move    $a0, $t7
+
+    bnez    $s5, run_generation_set_alive   # if (set != 0) goto run_generation_set_alive;
 
 run_generation_set_dead:
     li      $t4, 0
     sb      $t4, cells($t1)                 # cells[which_generation][x] = 0;
+
+    b       run_generation_step
+
+run_generation_set_alive:
+    li      $t4, 1
+    sb      $t4, cells($t1)                 # cells[which_generation][x] = 1;
+
+    # move    $t7, $a0
+    # li      $a0, 2
+    # li      $v0, 1
+    # syscall
+    # move    $a0, $t7
 
 run_generation_step:
     add     $t0, $t0, 1                     # x++;
@@ -327,6 +361,12 @@ run_generation_step:
 
 run_generation_end:
 run_generation_post:
+
+    move    $t7, $a0
+    li      $a0, '\n'
+    li      $v0, 11
+    syscall
+    move    $a0, $t7
 
     # Restore registers from the stack
     lb      $s0, 0($sp)
@@ -346,12 +386,6 @@ run_generation_post:
 #
 # Given `world_size', and `which_generation', print out the
 # specified generation.
-#
-# REPLACE THIS COMMENT WITH A LIST OF THE REGISTERS USED IN
-# `print_generation', AND THE PURPOSES THEY ARE ARE USED FOR
-#
-# YOU SHOULD ALSO NOTE WHICH REGISTERS DO NOT HAVE THEIR
-# ORIGINAL VALUE WHEN `print_generation' FINISHES
 #
 # arguments:
 # $a0   world_size
