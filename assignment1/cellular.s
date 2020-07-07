@@ -69,7 +69,7 @@ main:
 
     # if (rule < MIN_WORLD_SIZE) goto main_err_world_size;
     blt     $s0, MIN_WORLD_SIZE, main_err_world_size
-    # if (rule < MAX_WORLD_SIZE) goto main_err_world_size;
+    # if (rule > MAX_WORLD_SIZE) goto main_err_world_size;
     bgt     $s0, MAX_WORLD_SIZE, main_err_world_size
 
     # get rule
@@ -83,7 +83,7 @@ main:
 
     # if (rule < MIN_RULE) goto main_err_rule;
     blt     $s1, MIN_RULE, main_err_rule
-    # if (rule < MAX_RULE) goto main_err_rule;
+    # if (rule > MAX_RULE) goto main_err_rule;
     bgt     $s1, MAX_RULE, main_err_rule
 
     # get number of generations
@@ -135,10 +135,6 @@ main_run_loop:
     b       main_run_loop                   # }
 
 main_run_end:
-
-    li      $a0, '\n'                       # putchar('\n');
-    li      $v0, 11
-    syscall
 
     ###################
     # Print generations
@@ -261,8 +257,9 @@ run_generation_skip_left:
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x + 1]
 
     li      $s2, 0                          # int right = 0;
-    # if (x >= world_size) goto run_generation_skip_right
-    bgt     $t0, $a1, run_generation_skip_right
+    # if (x >= world_size - ) goto run_generation_skip_right
+    addi    $t3, $a0, -1
+    bge     $t0, $t3, run_generation_skip_right
 
     lb      $s2, cells($t1)                 # right = cells[which_generation - 1][x + 1];
 run_generation_skip_right:
@@ -286,6 +283,12 @@ run_generation_skip_right:
     add     $t1, $t1, $t0                   # calculate &cells[which_generation][x]
 
     # move    $t7, $a0
+    # move    $a0, $a1
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '-'
+    # li      $v0, 11
+    # syscall
     # move    $a0, $t0
     # li      $v0, 1
     # syscall
@@ -342,22 +345,9 @@ run_generation_set_alive:
     li      $t4, 1
     sb      $t4, cells($t1)                 # cells[which_generation][x] = 1;
 
-    # move    $t7, $a0
-    # li      $a0, 2
-    # li      $v0, 1
-    # syscall
-    # move    $a0, $t7
-
 run_generation_step:
     add     $t0, $t0, 1                     # x++;
     b       run_generation_loop
-
-    # move    $t7, $a0
-    # move    $a0, $a1
-    # li      $v0, 1
-    # syscall
-    # move    $a0, $t7
-
 
 run_generation_end:
 run_generation_post:
