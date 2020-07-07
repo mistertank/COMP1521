@@ -266,7 +266,7 @@ run_generation_skip_left:
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x + 1]
 
     li      $s2, 0                          # int right = 0;
-    add     $t3, $a0, 1                     # t3 = world_size - 1
+    sub     $t3, $a0, 1                     # t3 = world_size - 1
     # if (x >= world_size - 1) goto run_generation_skip_right
     bge     $t0, $t3, run_generation_skip_right
 
