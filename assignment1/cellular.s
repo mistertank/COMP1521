@@ -285,50 +285,50 @@ run_generation_skip_right:
     mul     $t1, $a1, $a0                   # calculate cells[which_generation]
     add     $t1, $t1, $t0                   # calculate &cells[which_generation][x]
 
-    move    $t7, $a0
-    move    $a0, $t0
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s0
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s1
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s2
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s3
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s4
-    li      $v0, 1
-    syscall
-    li      $a0, ' '
-    li      $v0, 11
-    syscall
-    move    $a0, $s5
-    li      $v0, 1
-    syscall
-    li      $a0, '\n'
-    li      $v0, 11
-    syscall
-    move    $a0, $t7
+    # move    $t7, $a0
+    # move    $a0, $t0
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s0
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s1
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s2
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s3
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s4
+    # li      $v0, 1
+    # syscall
+    # li      $a0, ' '
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $s5
+    # li      $v0, 1
+    # syscall
+    # li      $a0, '\n'
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $t7
 
     bnez    $s5, run_generation_set_alive   # if (set != 0) goto run_generation_set_alive;
 
@@ -362,11 +362,11 @@ run_generation_step:
 run_generation_end:
 run_generation_post:
 
-    move    $t7, $a0
-    li      $a0, '\n'
-    li      $v0, 11
-    syscall
-    move    $a0, $t7
+    # move    $t7, $a0
+    # li      $a0, '\n'
+    # li      $v0, 11
+    # syscall
+    # move    $a0, $t7
 
     # Restore registers from the stack
     lb      $s0, 0($sp)
