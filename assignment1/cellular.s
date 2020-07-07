@@ -67,6 +67,7 @@ main:
     syscall
     move    $s0, $v0
 
+    # check if world size is valid
     # if (rule < MIN_WORLD_SIZE) goto main_err_world_size;
     blt     $s0, MIN_WORLD_SIZE, main_err_world_size
     # if (rule > MAX_WORLD_SIZE) goto main_err_world_size;
@@ -81,6 +82,7 @@ main:
     syscall
     move    $s1, $v0
 
+    # check if rule is valid
     # if (rule < MIN_RULE) goto main_err_rule;
     blt     $s1, MIN_RULE, main_err_rule
     # if (rule > MAX_RULE) goto main_err_rule;
@@ -95,6 +97,7 @@ main:
     syscall
     move    $s2, $v0
 
+    # check if number of generations is valid
     # if (n_generations < MIN_GENERATIONS) goto main_err_generations;
     blt     $s2, MIN_GENERATIONS, main_err_generations
     # if (n_generations > MAX_GENERATIONS) goto main_err_generations;
@@ -145,11 +148,11 @@ main_print_reverse:
 main_print_reverse_loop:
     blt     $s4, 0, main_print_reverse_end  # while (g >= 0) {
 
-    move    $a0, $s0                        #   print_generation(world_size, g);
+    move    $a0, $s0                        # print_generation(world_size, g);
     move    $a1, $s4
     jal     print_generation
 
-    sub     $s4, $s4, 1                     #   g--;
+    sub     $s4, $s4, 1                     # g--;
     b       main_print_reverse_loop
 main_print_reverse_end:
     b       main_print_end                  # }
@@ -159,11 +162,11 @@ main_print_normal:
 main_print_normal_loop:
     bgt     $s4, $s2, main_print_normal_end # while (g <= n_generations) {
 
-    move    $a0, $s0                        #   print_generation(world_size, g);
+    move    $a0, $s0                        # print_generation(world_size, g);
     move    $a1, $s4
     jal     print_generation
 
-    add     $s4, $s4, 1                     #   g++;
+    add     $s4, $s4, 1                     # g++;
     b       main_print_normal_loop
 main_print_normal_end:
     b       main_print_end                  # }
@@ -172,32 +175,33 @@ main_print_end:
 main_exit_normal:
     lw      $ra, ($sp)                      # restore $ra from the stack
     add     $sp, $sp, 4
-    li      $v0, 0
+
+    li      $v0, 0                          # return 0;
     jr      $ra
 
     ###################
     # Error exit labels
 
 main_err_world_size:
-    la      $a0, error_world_size
+    la      $a0, error_world_size           # printf("Invalid world size\n");
     li      $v0, 4
     syscall
     b       main_exit_err
 
 main_err_rule:
-    la      $a0, error_rule
+    la      $a0, error_rule                 # printf("Invalid rule\n");
     li      $v0, 4
     syscall
     b       main_exit_err
 
 main_err_generations:
-    la      $a0, error_n_generations
+    la      $a0, error_n_generations        # printf("Invalid number of generations\n");
     li      $v0, 4
     syscall
     b       main_exit_err
 
 main_exit_err:
-    li      $v0, 1
+    li      $v0, 1                          # return 1;
     jr      $ra
 
 
@@ -208,23 +212,26 @@ main_exit_err:
 # a new generation according to `rule' and store it in `cells'.
 #
 # arguments:
-# $a0   world_size
-# $a1   which_generation
-# $a2   rule
+# $a0       world_size
+# $a1       which_generation
+# $a2       rule
 #
 # local variables:
-# $s0   left
-# $s1   center
-# $s2   right
-# $s3   state
-# $s4   bit
-# $s5   set
-# $t0   x
-# $t1   indexing the cells array
+# $s0       left
+# $s1       center
+# $s2       right
+# $s3       state
+# $s4       bit
+# $s5       set
+# $t0       x
+# $t1       indexing the cells array
+# $t2       intermediate values when calculating state
+# $t3       (world_size - 1)
+# $t4       number to insert at cells[which_generation][x]
+
 
 run_generation:
 run_generation_init:
-
     # Store registers on the stack
     sub     $sp, $sp, 6
     sb      $s5, 5($sp)
@@ -238,27 +245,29 @@ run_generation_init:
 run_generation_loop:
     bge     $t0, $a0, run_generation_end    # while (x < world_size)
 
-    # Calculate index of left cell
+    # Get left cell
     sub     $t1, $a1, 1                     # calculate (which_generation - 1)
     mul     $t1, $t1, $a0                   # calculate cells[which_generation - 1]
     add     $t1, $t1, $t0                   # calculate &cells[which_generation - 1][x]
     sub     $t1, $t1, 1                     # calculate &cells[which_generation - 1][x - 1]
 
     li      $s0, 0                          # int left = 0;
-    ble     $t0, 0, run_generation_skip_left# if (x <= 0) goto run_generation_skip_left;
+    # if (x <= 0) goto run_generation_skip_left;
+    ble     $t0, 0, run_generation_skip_left
+
     lb      $s0, cells($t1)                 # left = cells[which_generation - 1][x - 1];
 run_generation_skip_left:
 
-    # Calculate index of centre cell
+    # Get centre cell
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x]
     lb      $s1, cells($t1)                 # int centre = cells[which_generation - 1][x];
 
-    # Calculate index of right cell
+    # Get right cell
     addi    $t1, $t1, 1                     # calculate &cells[which_generation - 1][x + 1]
 
     li      $s2, 0                          # int right = 0;
-    # if (x >= world_size - ) goto run_generation_skip_right
-    addi    $t3, $a0, -1
+    add     $t3, $a0, 1                     # t3 = world_size - 1
+    # if (x >= world_size - 1) goto run_generation_skip_right
     bge     $t0, $t3, run_generation_skip_right
 
     lb      $s2, cells($t1)                 # right = cells[which_generation - 1][x + 1];
@@ -266,14 +275,16 @@ run_generation_skip_right:
 
     # Convert states into one value
     sll     $s3, $s0, 2                     # state = left << 2;
-    sll     $t2, $s1, 1                     # t2 = center << 1;
-    or      $s3, $s3, $t2                   # state |= t2;
-    sll     $t2, $s2, 0                     # t2 = right << 0;
-    or      $s3, $s3, $t2                   # state |= t2;
+
+    sll     $t2, $s1, 1                     # state |= center << 1;
+    or      $s3, $s3, $t2
+
+    sll     $t2, $s2, 0                     # state |= right << 0;
+    or      $s3, $s3, $t2
 
     # Get corresponding bit
-    li      $t3, 1
-    sll     $s4, $t3, $s3                   # bit = 1 << state;
+    li      $t3, 1                          # bit = t3 << state;
+    sll     $s4, $t3, $s3
 
     # Check if bit is set in the rule
     and     $s5, $a2, $s4                   # set = rule & bit;
@@ -282,62 +293,11 @@ run_generation_skip_right:
     mul     $t1, $a1, $a0                   # calculate cells[which_generation]
     add     $t1, $t1, $t0                   # calculate &cells[which_generation][x]
 
-    # move    $t7, $a0
-    # move    $a0, $a1
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '-'
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $t0
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s0
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s1
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s2
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s3
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s4
-    # li      $v0, 1
-    # syscall
-    # li      $a0, ' '
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $s5
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $t7
-
     bnez    $s5, run_generation_set_alive   # if (set != 0) goto run_generation_set_alive;
 
 run_generation_set_dead:
-    li      $t4, 0
-    sb      $t4, cells($t1)                 # cells[which_generation][x] = 0;
+    li      $t4, 0                          # cells[which_generation][x] = 0;
+    sb      $t4, cells($t1)
 
     b       run_generation_step
 
@@ -351,13 +311,6 @@ run_generation_step:
 
 run_generation_end:
 run_generation_post:
-
-    # move    $t7, $a0
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-    # move    $a0, $t7
-
     # Restore registers from the stack
     lb      $s0, 0($sp)
     lb      $s1, 1($sp)
@@ -378,13 +331,15 @@ run_generation_post:
 # specified generation.
 #
 # arguments:
-# $a0   world_size
-# $a1   which_generation
+# $a0       world_size
+# $a1       which_generation
 #
 # local variables:
-# $s0   world_size
-# $s1   which_generation
-# $t0   x
+# $s0       world_size
+# $s1       which_generation
+# $t0       x
+# $t1       indexing the cells array
+# $t2       value of cells[which_generation][x]
 
 print_generation:
 print_generation_init:
@@ -444,64 +399,4 @@ print_generation_post:
 
     # Return to caller
     jr  $ra
-
-###############################################################################
-# END OF PROGRAM
-###############################################################################
-
-###############################################################################
-# possibly useful stuff
-
-    # # Crappy debug print
-    # li      $a0, 2
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-
-    # move    $a0, $s0
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-
-    # move    $a0, $s1
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-
-    # move    $a0, $s2
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-
-    # move    $a0, $s3
-    # li      $v0, 1
-    # syscall
-    # li      $a0, '\n'
-    # li      $v0, 11
-    # syscall
-
-# # print_cell
-# # arguments:
-# # $a0   is_alive
-# print_cell:
-#     bne     $a0, 1, print_cell_dead
-# print_cell_alive:
-#     li      $a0, ALIVE_CHAR
-#     li      $v0, 11
-#     syscall
-#     b print_cell_end
-# print_cell_dead:
-#     li      $a0, DEAD_CHAR
-#     li      $v0, 11
-#     syscall
-# print_cell_end:
-#     jr $ra
 

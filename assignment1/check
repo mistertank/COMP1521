@@ -20,7 +20,7 @@ for i in ${!tests[@]}; do
   echo "${test}" | ./cellular > test/${i}.exp
   echo "${test}" | spim -f cellular.s | tail -n +2 > test/${i}.out
 
-  echo -ne "Test $i: ($(echo -ne $testin | tr "\n" " ")) \t"
+  echo -ne "Test $i: ($(echo -ne $testin | tr "\n" " ")) -"
   if ! diff "test/$i.exp" "test/$i.out" >/dev/null; then
     echo -e "\033[31m failed \033[0m"
   else
