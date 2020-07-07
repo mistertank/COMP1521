@@ -95,14 +95,14 @@ main:
     syscall
     move    $s2, $v0
 
-    li      $a0, '\n'                       # putchar('\n');
-    li      $v0, 11
-    syscall
-
     # if (n_generations < MIN_GENERATIONS) goto main_err_generations;
     blt     $s2, MIN_GENERATIONS, main_err_generations
     # if (n_generations > MAX_GENERATIONS) goto main_err_generations;
     bgt     $s2, MAX_GENERATIONS, main_err_generations
+
+    li      $a0, '\n'                       # putchar('\n');
+    li      $v0, 11
+    syscall
 
     # Handle negative generations
     li      $s3, 0                          # int reverse = 0;
