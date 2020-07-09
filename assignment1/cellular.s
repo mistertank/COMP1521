@@ -118,9 +118,9 @@ main_if_reverse_cond:
 main_if_reverse_false:
 
     # Set middle cell in first generation to alive
-    div     $t0, $s0, 2                     # t0 = world_size / 2;
-    li      $t1, 1                          # t1 = 1;
-    sb      $t1, cells($t0)                 # cells[0][t0] = t1;
+    div     $t0, $s0, 2                     # cells[0][world_size / 2] = 1
+    li      $t1, 1
+    sb      $t1, cells($t0)
 
     #################
     # Run generations
@@ -148,8 +148,8 @@ main_print_reverse:
 main_print_reverse_loop:
     blt     $s4, 0, main_print_reverse_end  # while (g >= 0) {
 
-    move    $a0, $s0                        # print_generation(world_size, g);
-    move    $a1, $s4
+    move    $a0, $s0                        # print_generation(world_size,
+    move    $a1, $s4                        #                  g)
     jal     print_generation
 
     sub     $s4, $s4, 1                     # g--;
@@ -162,8 +162,8 @@ main_print_normal:
 main_print_normal_loop:
     bgt     $s4, $s2, main_print_normal_end # while (g <= n_generations) {
 
-    move    $a0, $s0                        # print_generation(world_size, g);
-    move    $a1, $s4
+    move    $a0, $s0                        # print_generation(world_size,
+    move    $a1, $s4                        #                  g)
     jal     print_generation
 
     add     $s4, $s4, 1                     # g++;
@@ -245,6 +245,9 @@ run_generation_init:
 run_generation_loop:
     bge     $t0, $a0, run_generation_end    # while (x < world_size)
 
+    ###############################
+    # Get previous generation state
+
     # Get left cell
     sub     $t1, $a1, 1                     # calculate (which_generation - 1)
     mul     $t1, $t1, $a0                   # calculate cells[which_generation - 1]
@@ -288,6 +291,9 @@ run_generation_skip_right:
 
     # Check if bit is set in the rule
     and     $s5, $a2, $s4                   # set = rule & bit;
+
+    ########################
+    # Set current generation
 
     # Get index of new cell
     mul     $t1, $a1, $a0                   # calculate cells[which_generation]
