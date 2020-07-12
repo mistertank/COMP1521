@@ -17,10 +17,28 @@ loop0:
     add $t3, $t1, $t2   #
     sw $v0, ($t3)       #   store entered number in array
 
+    bltz    $v0, end0
+
     add $t0, $t0, 1     #   i++;
     b loop0             # }
 end0:
 
+loop1:
+    blez    $t0, end1
+
+    sub     $t0, $t0, 1
+    mul     $t1, $t0, 4
+    lw      $a0, numbers($t1)
+    li      $v0, 1
+    syscall
+
+    li      $a0, '\n'
+    la      $v0, 11
+    syscall
+
+    b       loop1
+
+end1:
 
     li $v0, 0           # return 0
     jr $31              #
