@@ -15,15 +15,31 @@ start:
 
     move $t0, $v0
 
+    li      $t5, 0      # i = 0;
+start2:
+    bge     $t5, $t2, end2 # if (i >= n_seen) goto end2
+
+    mul $t6, $t5, 4        # calculate &numbers[i]
+    lw  $t7, numbers($t6)
+    beq     $t0, $t7, end2  # if x != numbers[n_seen] {
+
+    addi     $t5, $t5, 1     # i++
+    b start2
+
+end2:
+
+    bne     $t5, $t2, skip_insert_num
+insert_num:
     mul $t3, $t2, 4     # calculate &numbers[n_seen]
     la $t4, numbers     #
     add $t3, $t3, $t4   #
     sw $t0, ($t3)       # numbers[n_seen] = x
 
     add $t2, $t2, 1     # n_seen++;
+
+skip_insert_num:
+
     b start
-
-
 
 end:
     la $a0, string1     # printf("10th different number was: ");
