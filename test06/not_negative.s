@@ -9,6 +9,19 @@ main:
     syscall              #
     move $t0, $v0
 
+main_is_negative:
+main_is_negative_cond:
+    bgez    $t0, main_is_negative_false
+
+main_is_negative_true:
+    la      $a0, str2
+    li      $v0, 4
+    syscall
+
+    b       main
+
+main_is_negative_false:
+
     la $a0, str1         # printf("You entered: ");
     li $v0, 4
     syscall
@@ -26,3 +39,5 @@ str0:
     .asciiz "Enter a number: "
 str1:
     .asciiz "You entered: "
+str2:
+    .asciiz "Enter a positive number\n"
