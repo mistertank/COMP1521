@@ -17,11 +17,15 @@ main:
     syscall             #
     move $t1, $v0
 
-
     # PUT YOUR CODE HERE
+    mul     $t2, $t0, 96    # calculate array[x]
 
+    mul     $t3, $t1, 4     # calculate &array[x][y]
+    add     $t2, $t2, $t3
 
-    li $a0, 42          # printf("%d", 42)
+    lw      $t4, array($t2) # a = array[x][y]
+
+    move    $a0, $t4
     li $v0, 1
     syscall
 
