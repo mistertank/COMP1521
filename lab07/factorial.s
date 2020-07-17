@@ -59,9 +59,34 @@ msg2:   .asciiz "! = "
 
     .text
 factorial:
-    #  ADD CODE TO CREATE STACK FRAME
+factorial_init:
+    sub     $sp, $sp, 8
+    sw      $s0, 4($sp)
+    sw      $ra, 0($sp)
 
-    # ADD CODE FORFUNCTION HERE
+factorial_body:
+    move    $s0, $a0        # t0 = n
 
-    # ADD CODE TO REMOVE STACK FRAME
+    ble     $s0, 1, factorial_skip_recurse
+
+factorial_recurse:
+    sub     $a0, $a0, 1     # n = n - 1
+
+    jal     factorial       # a = factorial(n - 1)
+    move    $t1, $v0
+
+    mul     $t2, $t1, $s0   # result = a * n
+
+    b       factorial_post
+
+factorial_skip_recurse:
+    li      $t2, 1          # result = 1
+
+    b       factorial_post
+
+factorial_post:
+    lw      $ra, 0($sp)
+    lw      $s0, 4($sp)
+    addi    $sp, $sp, 8
+    move    $v0, $t2
     jr  $ra
