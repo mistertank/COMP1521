@@ -10,11 +10,20 @@ main:
     li   $v0, 8          # fgets(buffer, 256, stdin)
     syscall              #
 
+    li   $t0, 0          # i = 0
+while:
+while_cond:
+    lb   $t1, line($t0)
+    beqz $t1, while_end
+
+    add  $t0, 1          # i++
+    b    while
+while_end:
     la   $a0, str1       # printf("Line length: ");
     li   $v0, 4
     syscall
 
-    li   $a0, 42         # printf("%d", i);
+    move $a0, $t0
     li   $v0, 1
     syscall
 
