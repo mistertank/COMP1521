@@ -25,8 +25,9 @@ main:
     li   $v0, 4
     syscall
 
+    lb   $a0, line($t0)
 
-    li   $a0, '?'        # printf("%c", '?');
+    # li   $a0, '?'        # printf("%c", '?');
     li   $v0, 11
     syscall
 
