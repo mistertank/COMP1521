@@ -6,6 +6,7 @@
 int main(int argc, char *argv[]) {
     if (argc < 4) {
         fprintf(stderr, "usage: %s FILENAME MIN MAX\n", argv[0]);
+        exit(1);
     }
 
     char *filename = argv[1];
@@ -14,7 +15,8 @@ int main(int argc, char *argv[]) {
 
     FILE *out = fopen(filename, "w");
     if (out == NULL) {
-        fprintf(stderr, "Cannot open %s\n", filename);
+        perror(filename);
+        exit(1);
     }
 
     for (int i = min; i <= max; i++) {
