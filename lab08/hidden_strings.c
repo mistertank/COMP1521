@@ -37,7 +37,8 @@ int main(int argc, char *argv[]) {
                 isPrinting = 1;
             }
         } else {
-            putchar('\n');
+            if (isPrinting) putchar('\n');
+            isPrinting = 0;
         }
     }
 
