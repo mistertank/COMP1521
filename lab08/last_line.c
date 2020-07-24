@@ -15,8 +15,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    fseek(in, -2, SEEK_END);
+    fseek(in, -1, SEEK_END);
     int c = fgetc(in);
+
+    int pos = ftell(in);
+
+    if (pos <= 1) {
+        printf("%c\n", c);
+        return 0;
+    }
+
+
+    if (c == '\n') {
+        c = fgetc(in);
+    }
 
     while (c != EOF && c != '\n') {
         // printf("c=%c %x\n", c, c);
@@ -26,13 +38,16 @@ int main(int argc, char *argv[]) {
     }
 
     c = fgetc(in);
-    // printf("c=%c %02x\n", c, c);
+    putchar(c);
+
+    int nPrint = 0;;
 
     while (c != EOF && c != '\n') {
         putchar(c);
         c = fgetc(in);
+        nPrint++;
     }
-    putchar('\n');
+    if (nPrint) putchar('\n');
 
     return 0;
 }
