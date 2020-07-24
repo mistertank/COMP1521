@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
     FILE *in = fopen(filename, "r");
     if (in == NULL) {
         perror(filename);
+        return 1;
     }
 
     int c;
