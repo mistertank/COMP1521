@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
     int c = fgetc(in);
 
     int pos = ftell(in);
+    // printf("%d\n", pos);
 
     if (pos <= 1) {
         if (isascii(c)) {
@@ -28,15 +29,20 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    while (c != EOF && c != '\n') {
-        // printf("c=%c %x\n", c, c);
-        int r = fseek(in, -2, SEEK_CUR);
-        if (r == -1) return 1;
+    if (c == '\n') {
+        fseek(in, -2, SEEK_CUR);
         c = fgetc(in);
     }
 
+    while (c != EOF && c != '\n') {
+        printf("c=%c %x\n", c, c);
+        int r = fseek(in, -2, SEEK_CUR);
+        if (r == -1) break;
+        c = fgetc(in);
+    }
+
+    putchar(c);
     c = fgetc(in);
-    // putchar(c);
 
     while (c != EOF) {
         putchar(c);
