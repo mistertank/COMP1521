@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
     fseek(in, -1, SEEK_END);
     int c = fgetc(in);
 
-    int pos = ftell(in);
-    // printf("%d\n", pos);
+    unsigned int pos = ftell(in);
+    // printf("%u\n", pos);
 
     if (pos <= 1) {
         if (isascii(c)) {
