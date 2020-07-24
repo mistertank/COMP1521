@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     }
 
     while (c != EOF && c != '\n') {
-        printf("c=%c %x\n", c, c);
+        // printf("c=%c %x\n", c, c);
         int r = fseek(in, -2, SEEK_CUR);
         if (r == -1) break;
         c = fgetc(in);
