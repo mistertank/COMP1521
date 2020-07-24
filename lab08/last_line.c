@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     int pos = ftell(in);
 
     if (pos <= 1) {
-        printf("%c\n", c);
+        putchar(c);
         return 0;
     }
 
@@ -40,14 +40,10 @@ int main(int argc, char *argv[]) {
     c = fgetc(in);
     // putchar(c);
 
-    int nPrint = 0;;
-
-    while (c != EOF && c != '\n') {
+    while (c != EOF) {
         putchar(c);
         c = fgetc(in);
-        nPrint++;
     }
-    if (nPrint) putchar('\n');
 
     return 0;
 }
