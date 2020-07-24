@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
 
     while (c != EOF && c != '\n') {
         printf("c=%c %x\n", c, c);
-        fseek(in, -2, SEEK_CUR);
+        int r = fseek(in, -2, SEEK_CUR);
+        if (r == -1) return 1;
         c = fgetc(in);
     }
 
