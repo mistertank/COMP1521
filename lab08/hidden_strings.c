@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
             isPrinting = 0;
         }
     }
+    if (isPrinting) putchar('\n');
 
     return 0;
 }
