@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         perror(filename);
     }
 
-    char c;
+    int c;
     int nRead = 0;
     while ((c = fgetc(in)) != EOF) {
         printf("byte %4d: %3d 0x%02x", nRead, c, c);
