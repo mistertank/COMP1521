@@ -1,5 +1,6 @@
 // last_line.c
 
+#include <ctype.h>
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
@@ -21,13 +22,10 @@ int main(int argc, char *argv[]) {
     int pos = ftell(in);
 
     if (pos <= 1) {
-        putchar(c);
+        if (isascii(c)) {
+            putchar(c);
+        }
         return 0;
-    }
-
-
-    if (c == '\n') {
-        c = fgetc(in);
     }
 
     while (c != EOF && c != '\n') {
