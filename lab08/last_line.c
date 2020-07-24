@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     }
 
     c = fgetc(in);
-    putchar(c);
+    // putchar(c);
 
     int nPrint = 0;;
 
