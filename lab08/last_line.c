@@ -19,14 +19,14 @@ int main(int argc, char *argv[]) {
     int c = fgetc(in);
 
     while (c != EOF && c != '\n') {
-        printf("c=%c %x\n", c, c);
+        // printf("c=%c %x\n", c, c);
         int r = fseek(in, -2, SEEK_CUR);
         if (r == -1) return 1;
         c = fgetc(in);
     }
 
     c = fgetc(in);
-    printf("c=%c %02x\n", c, c);
+    // printf("c=%c %02x\n", c, c);
 
     while (c != EOF && c != '\n') {
         putchar(c);
