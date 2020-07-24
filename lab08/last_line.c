@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
         c = fgetc(in);
     }
 
-    putchar(c);
+    if (c != '\n') putchar(c);
     c = fgetc(in);
 
     while (c != EOF) {
