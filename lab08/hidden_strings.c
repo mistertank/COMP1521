@@ -27,18 +27,17 @@ int main(int argc, char *argv[]) {
                 buffer[bufferIndex] = c;
                 bufferIndex++;
             } else {
-                if (bufferIndex) {
-                    for (int i = 0; i < 3; i++) {
-                        putchar(buffer[i]);
-                    }
-                    bufferIndex = 0;
+                for (int i = 0; bufferIndex && i < 3; i++) {
+                    putchar(buffer[i]);
                 }
+                bufferIndex = 0;
                 putchar(c);
                 isPrinting = 1;
             }
         } else {
             if (isPrinting) putchar('\n');
             isPrinting = 0;
+            bufferIndex = 0;
         }
     }
     if (isPrinting) putchar('\n');
