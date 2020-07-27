@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#define MAX_CHARS 10000
+#define MAX_CHARS 100000
 
 int isnotascii(int c) {
     return c >= 128 && c <= 255;
