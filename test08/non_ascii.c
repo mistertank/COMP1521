@@ -3,7 +3,10 @@
 // By Soorria Saruva (z5258068)
 
 #include <stdio.h>
-#include <ctype.h>
+
+int isnotascii(int c) {
+    return c >= 128 && c <= 255;
+}
 
 int main(int argc, char *argv[]) {
     FILE *in = fopen(argv[1], "r");
@@ -11,7 +14,7 @@ int main(int argc, char *argv[]) {
     int c;
 
     while ((c = fgetc(in)) != EOF) {
-        if (!isascii(c)) {
+        if (isnotascii(c)) {
             printf("%s: byte %d is non-ASCII\n", argv[1], pos);
             return 0;
         }
