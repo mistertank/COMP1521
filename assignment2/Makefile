@@ -1,4 +1,5 @@
 CC=dcc
+CFLAGS=-Werror -Wall
 
 smips: smips.c
 
