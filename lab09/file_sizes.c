@@ -15,5 +15,6 @@ int main(int argc, char *argv[]) {
         total += (long)s.st_size;
         printf("%s: %ld bytes\n", argv[i], (long)s.st_size);
     }
+    printf("Total: %ld\n", total);
     return EXIT_SUCCESS;
 }
