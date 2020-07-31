@@ -1,5 +1,5 @@
 main:
-    li   $a0, 4242424242  # printf("%d", 4242424242);
+    li   $a0, 42424242  # printf("%d", 42424242);
     li   $v0, 1
     syscall
     li   $a0,'\n'       # printf("%c", '\n');
