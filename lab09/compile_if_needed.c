@@ -47,9 +47,19 @@ void compile_if_needed(char *c_file) {
 //  or modification time of C file more recent than binary
 // return 0, otherwise
 int is_compile_needed(char *c_file, char *binary) {
+    struct stat cStat, binStat;
+    if (stat(binary, &binStat) != 0) {
+        return 1;
+    }
+    stat(c_file, &cStat);
+    long int cTime = cStat.st_mtime;
+    long int binTime = binStat.st_mtime;
 
-    return 1; // REPLACE ME WITH YOUR CODE
+    if (cTime > binTime) {
+        return 1;
+    }
 
+    return 0;
 }
 
 
