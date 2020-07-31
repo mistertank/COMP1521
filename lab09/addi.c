@@ -11,7 +11,7 @@
 
 // return the MIPS opcode for addi $t,$s, i
 uint32_t addi(int t, int s, int i) {
-    uint32_t result = 0x2000000;
+    uint32_t result = 0x20000000;
     result += (t & 0x1F) << 16;
     result += (s & 0x1F) << 21;
     result += ((uint16_t)i) & 0xFFFF;
