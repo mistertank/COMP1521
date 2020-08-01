@@ -15,11 +15,14 @@ typedef int16_t Immediate;
 
 ////////////
 // Registers
-typedef uint8_t Register;
+typedef uint8_t RegisterId;
 
-#define MIN_REGISTER ((Register) 0)
-#define MAX_REGISTER ((Register) 31)
+#define MIN_REGISTER ((RegisterId) 0)
+#define MAX_REGISTER ((RegisterId) 31)
 #define NUM_REGISTERS 32
+
+#define SYSCALL_REQUEST_REGISTER ((RegisterId) 2)
+#define SYSCALL_ARG_REGISTER ((RegisterId) 4)
 
 typedef enum registerName {
     REGISTER_S,
@@ -28,7 +31,7 @@ typedef enum registerName {
 } RegisterName;
 
 ////////////////////////
-// Instruction Id / Type
+// Instructions
 typedef enum instructionId {
     ADD,
     SUB,
@@ -52,39 +55,51 @@ typedef enum instructionId {
 
 typedef struct instruction {
     InstructionId   id;
-    Register        s, t, d;
+    RegisterId      s, t, d;
     Immediate       imm;
 } Instruction;
 
 #define LEN_HEX_INSTRUCTION 32
 
+#define MAX_NUM_INSTRUCTIONS 1000
+
+///////////
+// Syscalls
+#define SYSCALL_PRINT_INT  1
+#define SYSCALL_EXIT       10
+#define SYSCALL_PRINT_CHAR 11
+
 ////////////////////////////////////////////////////////////////////////
 // Helper Function Declarations
 
-///////////////////////
-// Parsing Instructions
-static Instruction parseInstruction(uint32_t bits);
+////////////////////////
+// Decoding Instructions
+static Instruction decodeInstruction(uint32_t bits);
 static InstructionId bitsToInstructionId(uint32_t bits);
-static Register bitsToRegisterNumber(uint32_t bits, RegisterName r);
+static RegisterId bitsToRegisterId(uint32_t bits, RegisterName r);
 static Immediate bitsToImmediate(uint32_t bits);
 
 ///////////////////////
 // Running Instructions
-static void runInstruction(int registers[NUM_REGISTERS], Instruction instruction);
-static void add(int registers[NUM_REGISTERS], Instruction instruction);
-static void sub(int registers[NUM_REGISTERS], Instruction instruction);
-static void and(int registers[NUM_REGISTERS], Instruction instruction);
-static void or(int registers[NUM_REGISTERS], Instruction instruction);
-static void slt(int registers[NUM_REGISTERS], Instruction instruction);
-static void mul(int registers[NUM_REGISTERS], Instruction instruction);
-static void beq(int registers[NUM_REGISTERS], Instruction instruction);
-static void bne(int registers[NUM_REGISTERS], Instruction instruction);
-static void addi(int registers[NUM_REGISTERS], Instruction instruction);
-static void slti(int registers[NUM_REGISTERS], Instruction instruction);
-static void andi(int registers[NUM_REGISTERS], Instruction instruction);
-static void ori(int registers[NUM_REGISTERS], Instruction instruction);
-static void lui(int registers[NUM_REGISTERS], Instruction instruction);
-static void syscall(int registers[NUM_REGISTERS]);
+static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC);
+static void add(int registers[NUM_REGISTERS], Instruction i);
+static void sub(int registers[NUM_REGISTERS], Instruction i);
+static void and(int registers[NUM_REGISTERS], Instruction i);
+static void or(int registers[NUM_REGISTERS], Instruction i);
+static void slt(int registers[NUM_REGISTERS], Instruction i);
+static void mul(int registers[NUM_REGISTERS], Instruction i);
+static void beq(int registers[NUM_REGISTERS], Instruction i, int *PC);
+static void bne(int registers[NUM_REGISTERS], Instruction i, int *PC);
+static void addi(int registers[NUM_REGISTERS], Instruction i);
+static void slti(int registers[NUM_REGISTERS], Instruction i);
+static void andi(int registers[NUM_REGISTERS], Instruction i);
+static void ori(int registers[NUM_REGISTERS], Instruction i);
+static void lui(int registers[NUM_REGISTERS], Instruction i);
+static void syscall(int registers[NUM_REGISTERS], int *PC);
+
+////////////////////////
+// Decoding Instructions
+static void printInstruction(Instruction i, int instructionNum);
 
 ////////////////////////////////////////////////////////////////////////
 // Main Function
@@ -104,56 +119,76 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // Get Number of Instructions by reading the number of newline
-    // characters
-    int numInstructions = 0;
-    for (int c = fgetc(in); c != EOF; c = fgetc(in)) {
-        if (c == '\n') numInstructions++;
-    }
-    fseek(in, 0, SEEK_SET);
+    // Create array of instruciton & registers
+    Instruction instructions[MAX_NUM_INSTRUCTIONS];
+    int32_t registers[NUM_REGISTERS] = {0};
 
-    // Create array of instructions
-    Instruction *instructions = malloc(sizeof(Instruction) * numInstructions);
-    if (instructions == NULL) {
-        fprintf(stderr, "Could not allocate instructions array\n");
-        return EXIT_FAILURE;
-    }
-
-    // Parse the instructions
-    int currInstructionIndex = 0;
+    // Decode the instructions
+    int nInstructions = 0;
     uint32_t instructionBits = 0;
     while (fscanf(in, "%x", &instructionBits) != EOF) {
-        Instruction new = parseInstruction(instructionBits);
-        instructions[currInstructionIndex] = new;
-        currInstructionIndex++;
-        printf("%d %d\n", new.s, new.t);
+        Instruction new = decodeInstruction(instructionBits);
+        if (new.id == INVALID_INSTRUCTION) {
+            fprintf(
+                stderr, "%s:%d: invalid instruction code: %d\n",
+                filename, nInstructions, instructionBits
+            );
+        }
+        instructions[nInstructions] = new;
+        nInstructions++;
     }
     fclose(in);
 
-    free(instructions);
+    // Print out the instructions
+    printf("Program\n");
+    for (int i = 0; i < nInstructions; i++) {
+        printInstruction(instructions[i], i);
+    }
+
+    // Run the instructions
+    printf("Output\n");
+    int PC = 0;
+    while (PC < nInstructions) {
+        runInstruction(registers, instructions[PC], &PC);
+        PC++;
+    }
+
+    // Print out non-zero registers
+    printf("Registers\n");
+    for (int i = 0; i < NUM_REGISTERS; i++) {
+        if (registers[i] != 0) {
+            printf("$%-2d = %d\n", i, registers[i]);
+        }
+    }
+
     return EXIT_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // Helper Function Implementations
 
-///////////////////////
-// Parsing Instructions
+////////////////////////
+// Decoding Instructions
 
-static Instruction parseInstruction(uint32_t bits) {
-    return (Instruction){
+// Decodes the bits of the instruction and returns the information in
+// the instruction.
+static Instruction decodeInstruction(uint32_t bits) {
+    Instruction new = {
         .id  = bitsToInstructionId(bits),
-        .s   = bitsToRegisterNumber(bits, REGISTER_S),
-        .t   = bitsToRegisterNumber(bits, REGISTER_T),
-        .d   = bitsToRegisterNumber(bits, REGISTER_D),
+        .s   = bitsToRegisterId(bits, REGISTER_S),
+        .t   = bitsToRegisterId(bits, REGISTER_T),
+        .d   = bitsToRegisterId(bits, REGISTER_D),
         .imm = bitsToImmediate(bits),
     };
+    return new;
 }
 
+// Extract the instruction from the instruction's bits.
 static InstructionId bitsToInstructionId(uint32_t bits) {
     // SYSCALL
-    if (bits == 12) return SYSCALL;
+    if (bits == 0xC) return SYSCALL;
 
+    // Get the parts that are different between instructions
     uint32_t first6Bits = ((0b111111u << 26) & bits) >> 26;
     uint32_t last6Bits = 0b111111 & bits;
 
@@ -182,28 +217,175 @@ static InstructionId bitsToInstructionId(uint32_t bits) {
     return INVALID_INSTRUCTION;
 }
 
-static Register bitsToRegisterNumber(uint32_t bits, RegisterName r) {
+// Extract the specified register from the instruction's bits.
+static RegisterId bitsToRegisterId(uint32_t bits, RegisterName r) {
     int offset = 0;
     switch (r) {
     case REGISTER_S:
         offset = 21;
         break;
-    case REGISTER_D:
+    case REGISTER_T:
         offset = 16;
         break;
-    case REGISTER_T:
+    case REGISTER_D:
         offset = 11;
         break;
     }
-    uint32_t mask = 0b11111 << offset;
-    return (bits & mask) >> offset;
+    uint32_t mask = 0x1F << offset;
+    RegisterId res = (bits & mask) >> offset;
+    return res;
 }
 
+// Extract the immediate from the instruction's bits.
 static Immediate bitsToImmediate(uint32_t bits) {
-    return bits & 0xFFFF;
+    return (Immediate)(bits & 0xFFFF);
 }
 
 ///////////////////////
 // Running Instructions
 
+// Runs the given instruction, modifying the registers and program
+// counter as required.
+static void runInstruction(int registers[NUM_REGISTERS], Instruction instruction, int *PC) {
+    switch (instruction.id) {
+    case ADD:  add(registers, instruction); break;
+    case SUB:  sub(registers, instruction); break;
+    case AND:  and(registers, instruction); break;
+    case OR:   or(registers, instruction); break;
+    case SLT:  slt(registers, instruction); break;
+    case MUL:  mul(registers, instruction); break;
+    case BEQ:  beq(registers, instruction, PC); break;
+    case BNE:  bne(registers, instruction, PC); break;
+    case ADDI: addi(registers, instruction); break;
+    case SLTI: slti(registers, instruction); break;
+    case ANDI: andi(registers, instruction); break;
+    case ORI:  ori(registers, instruction); break;
+    case LUI:  lui(registers, instruction); break;
+    case SYSCALL: syscall(registers, PC); break;
+    case INVALID_INSTRUCTION: break;
+    }
+}
+
+static void add(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] + registers[i.t];
+}
+static void sub(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] - registers[i.t];
+}
+static void and(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] & registers[i.t];
+}
+static void or(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] | registers[i.t];
+}
+static void slt(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] < registers[i.t];
+}
+static void mul(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.d] = registers[i.s] | registers[i.t];
+}
+static void beq(int registers[NUM_REGISTERS], Instruction i, int *PC) {
+    if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
+}
+static void bne(int registers[NUM_REGISTERS], Instruction i, int *PC) {
+    if (registers[i.s] != registers[i.t]) *PC += i.imm - 1;
+}
+static void addi(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.t] = registers[i.s] + i.imm;
+}
+static void slti(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.t] = registers[i.s] < i.imm;
+}
+static void andi(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.t] = registers[i.s] & i.imm;
+}
+static void ori(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.t] = registers[i.s] | i.imm;
+}
+static void lui(int registers[NUM_REGISTERS], Instruction i) {
+    registers[i.t] = i.imm << 16;
+}
+static void syscall(int registers[NUM_REGISTERS], int *PC) {
+    int request = registers[SYSCALL_REQUEST_REGISTER];
+    int arg = registers[SYSCALL_ARG_REGISTER];
+
+    if (request == SYSCALL_PRINT_INT) {
+        printf("%d", arg);
+    } else if (request == SYSCALL_EXIT) {
+        exit(EXIT_SUCCESS);
+    } else if (request == SYSCALL_PRINT_CHAR) {
+        putchar(arg);
+    } else {
+        printf("Unknown system call: %d\n", request);
+        // Set program counter past number of instructions so not more
+        // instructions are run.
+        *PC = MAX_NUM_INSTRUCTIONS;
+    }
+}
+
+////////////////////////
+// Printing Instructions
+
+// Print out the instruction in the required format.
+static void printInstruction(Instruction i, int instructionNum) {
+    // Print instruction number
+    printf("%3d: ", instructionNum);
+
+    // Print MIPS Instruction
+    switch (i.id) {
+    case  ADD: printf("add  "); break;
+    case  SUB: printf("sub  "); break;
+    case  AND: printf("and  "); break;
+    case   OR: printf("or   "); break;
+    case  SLT: printf("slt  "); break;
+    case  MUL: printf("mul  "); break;
+    case  BEQ: printf("beq  "); break;
+    case  BNE: printf("bne  "); break;
+    case ADDI: printf("addi "); break;
+    case SLTI: printf("alti "); break;
+    case ANDI: printf("andi "); break;
+    case  ORI: printf("ori  "); break;
+    case  LUI: printf("lui  "); break;
+    case SYSCALL: printf("syscall"); break;
+    case INVALID_INSTRUCTION: exit(EXIT_FAILURE);
+    }
+
+    // Print registers / immediate
+    switch (i.id) {
+    case ADD:   // $d, $s, $t
+    case SUB:
+    case AND:
+    case OR:
+    case SLT:
+    case MUL:
+        printf("$%d, $%d, $%d", i.d, i.s, i.t);
+        break;
+
+    case BEQ:   // $s, $t, Imm
+    case BNE:
+        printf("$%d, $%d, %d", i.s, i.t, i.imm);
+        break;
+
+    case ADDI:  // $t, $s, Imm
+    case SLTI:
+    case ANDI:
+    case ORI:
+        printf("$%d, $%d, %d", i.t, i.s, i.imm);
+        break;
+
+    case LUI:   // $t, Imm
+        printf("$%d, %d", i.t, i.imm);
+        break;
+
+    // No register / immediate printed
+    case SYSCALL:
+        break;
+    case INVALID_INSTRUCTION:
+        break;
+    }
+
+    putchar('\n');
+}
+
 ////////////////////////////////////////////////////////////////////////
+
