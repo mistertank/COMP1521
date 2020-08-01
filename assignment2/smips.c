@@ -246,21 +246,23 @@ static Immediate bitsToImmediate(uint32_t bits) {
 
 // Runs the given instruction, modifying the registers and program
 // counter as required.
-static void runInstruction(int registers[NUM_REGISTERS], Instruction instruction, int *PC) {
-    switch (instruction.id) {
-    case ADD:  add(registers, instruction); break;
-    case SUB:  sub(registers, instruction); break;
-    case AND:  and(registers, instruction); break;
-    case OR:   or(registers, instruction); break;
-    case SLT:  slt(registers, instruction); break;
-    case MUL:  mul(registers, instruction); break;
-    case BEQ:  beq(registers, instruction, PC); break;
-    case BNE:  bne(registers, instruction, PC); break;
-    case ADDI: addi(registers, instruction); break;
-    case SLTI: slti(registers, instruction); break;
-    case ANDI: andi(registers, instruction); break;
-    case ORI:  ori(registers, instruction); break;
-    case LUI:  lui(registers, instruction); break;
+static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC) {
+    if (i.id >= ADD && i.id <= MUL && i.d == 0) return;
+    if (i.id >= ADDI && i.id <= LUI && i.t == 0) return;
+    switch (i.id) {
+    case ADD:  add(registers, i); break;
+    case SUB:  sub(registers, i); break;
+    case AND:  and(registers, i); break;
+    case OR:   or(registers, i); break;
+    case SLT:  slt(registers, i); break;
+    case MUL:  mul(registers, i); break;
+    case BEQ:  beq(registers, i, PC); break;
+    case BNE:  bne(registers, i, PC); break;
+    case ADDI: addi(registers, i); break;
+    case SLTI: slti(registers, i); break;
+    case ANDI: andi(registers, i); break;
+    case ORI:  ori(registers, i); break;
+    case LUI:  lui(registers, i); break;
     case SYSCALL: syscall(registers, PC); break;
     case INVALID_INSTRUCTION: break;
     }
