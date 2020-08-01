@@ -312,7 +312,7 @@ static void syscall(int registers[NUM_REGISTERS], int *PC) {
     if (request == SYSCALL_PRINT_INT) {
         printf("%d", arg);
     } else if (request == SYSCALL_EXIT) {
-        exit(EXIT_SUCCESS);
+        *PC = MAX_NUM_INSTRUCTIONS;
     } else if (request == SYSCALL_PRINT_CHAR) {
         putchar(arg);
     } else {
