@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Print out non-zero registers
-    printf("Registers\n");
+    printf("Registers After Execution\n");
     for (int i = 0; i < NUM_REGISTERS; i++) {
         if (registers[i] != 0) {
             printf("$%-2d = %d\n", i, registers[i]);
