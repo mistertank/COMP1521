@@ -7,7 +7,11 @@
 // buffer pointed to by s.  Reading stops after an EOF or a newline.  If a newline is read, it  is
 // stored  into  the buffer.  A terminating null byte ('\0') is stored after the last character in the buffer.
 void get_string(char *s, int size, FILE *stream) {
-
-    // PUT YOUR CODE HERE
-
+    int i = 0;
+    int c;
+    while ((c = fgetc(stream)) != EOF && c != '\n' && i < size - 1) {
+        s[i++] = c;
+    }
+    if (c == '\n') s[i++] = '\n';
+    s[i] = '\0';
 }
