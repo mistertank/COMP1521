@@ -284,7 +284,7 @@ static void slt(int registers[NUM_REGISTERS], Instruction i) {
     registers[i.d] = registers[i.s] < registers[i.t];
 }
 static void mul(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] | registers[i.t];
+    registers[i.d] = registers[i.s] * registers[i.t];
 }
 static void beq(int registers[NUM_REGISTERS], Instruction i, int *PC) {
     if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
