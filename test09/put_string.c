@@ -5,7 +5,10 @@
 // print s to stdout with a new line appended using fputc (only)
 
 void put_string(char *s) {
-
-   // PUT YOUR CODE HERE
-
+    int i = 0;
+    while (s[i] != '\0') {
+        putchar(s[i]);
+        i++;
+    }
+    putchar('\n');
 }
