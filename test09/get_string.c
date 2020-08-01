@@ -8,9 +8,10 @@
 // stored  into  the buffer.  A terminating null byte ('\0') is stored after the last character in the buffer.
 void get_string(char *s, int size, FILE *stream) {
     int i = 0;
-    int c;
-    while ((c = fgetc(stream)) != EOF && c != '\n' && i < size - 1) {
+    int c = fgetc(stream);
+    while (c != EOF && c != '\n' && i < size - 1) {
         s[i++] = c;
+        c = fgetc(stream);
     }
     if (c == '\n') s[i++] = '\n';
     s[i] = '\0';
