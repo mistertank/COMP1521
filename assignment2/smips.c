@@ -329,7 +329,7 @@ static void syscall(int registers[NUM_REGISTERS], int *PC) {
     } else if (request == SYSCALL_PRINT_CHAR) {
         putchar(arg);
     } else {
-        if (request == SYSCALL_EXIT) {
+        if (request != SYSCALL_EXIT) {
             printf("Unknown system call: %d\n", request);
         }
 
