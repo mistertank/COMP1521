@@ -1,6 +1,8 @@
 // smips.c
 //
 // Emulator for a subset of MIPS
+//
+// By Soorriamoorthy Saruva (z5258068)
 
 #include <stdio.h>
 #include <stdint.h>
@@ -20,6 +22,7 @@ typedef uint8_t RegisterId;
 #define MIN_REGISTER ((RegisterId) 0)
 #define MAX_REGISTER ((RegisterId) 31)
 #define NUM_REGISTERS 32
+#define ZERO_REGISTER ((RegisterId) 0)
 
 #define SYSCALL_REQUEST_REGISTER ((RegisterId) 2)
 #define SYSCALL_ARG_REGISTER ((RegisterId) 4)
@@ -107,8 +110,8 @@ static void printInstruction(Instruction i, int instructionNum);
 int main(int argc, char *argv[]) {
     // Check number of arguments
     if (argc != 2) {
-        fprintf(stderr, "usage: %s FILENAME\n", argv[0]);
-        return EXIT_FAILURE;
+        fprintf(stderr, "usage: %s [FILENAME]\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
     // Open file
@@ -116,11 +119,12 @@ int main(int argc, char *argv[]) {
     FILE *in = fopen(filename, "r");
     if (in == NULL) {
         perror(filename);
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
-    // Create array of instruciton & registers
+    // Create array of instruciton
     Instruction instructions[MAX_NUM_INSTRUCTIONS];
+    // Initialise registers to 0
     int32_t registers[NUM_REGISTERS] = {0};
 
     // Decode the instructions
@@ -128,12 +132,16 @@ int main(int argc, char *argv[]) {
     uint32_t instructionBits = 0;
     while (fscanf(in, "%x", &instructionBits) != EOF) {
         Instruction new = decodeInstruction(instructionBits);
+
+        // Exit if the instruction is invalid
         if (new.id == INVALID_INSTRUCTION) {
             fprintf(
                 stderr, "%s:%d: invalid instruction code: %d\n",
                 filename, nInstructions, instructionBits
             );
+            exit(EXIT_FAILURE);
         }
+
         instructions[nInstructions] = new;
         nInstructions++;
     }
@@ -247,24 +255,28 @@ static Immediate bitsToImmediate(uint32_t bits) {
 // Runs the given instruction, modifying the registers and program
 // counter as required.
 static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC) {
-    if (i.id >= ADD && i.id <= MUL && i.d == 0) return;
-    if (i.id >= ADDI && i.id <= LUI && i.t == 0) return;
+    // Do nothing if the register being set is register 0
+    if (
+        (i.id >= ADD && i.id <= MUL && i.d == ZERO_REGISTER) ||
+        (i.id >= ADDI && i.id <= LUI && i.t == ZERO_REGISTER)
+    ) return;
+
     switch (i.id) {
-    case ADD:  add(registers, i); break;
-    case SUB:  sub(registers, i); break;
-    case AND:  and(registers, i); break;
-    case OR:   or(registers, i); break;
-    case SLT:  slt(registers, i); break;
-    case MUL:  mul(registers, i); break;
-    case BEQ:  beq(registers, i, PC); break;
-    case BNE:  bne(registers, i, PC); break;
-    case ADDI: addi(registers, i); break;
-    case SLTI: slti(registers, i); break;
-    case ANDI: andi(registers, i); break;
-    case ORI:  ori(registers, i); break;
-    case LUI:  lui(registers, i); break;
-    case SYSCALL: syscall(registers, PC); break;
-    case INVALID_INSTRUCTION: break;
+        case ADD:  add(registers, i); break;
+        case SUB:  sub(registers, i); break;
+        case AND:  and(registers, i); break;
+        case OR:   or(registers, i); break;
+        case SLT:  slt(registers, i); break;
+        case MUL:  mul(registers, i); break;
+        case BEQ:  beq(registers, i, PC); break;
+        case BNE:  bne(registers, i, PC); break;
+        case ADDI: addi(registers, i); break;
+        case SLTI: slti(registers, i); break;
+        case ANDI: andi(registers, i); break;
+        case ORI:  ori(registers, i); break;
+        case LUI:  lui(registers, i); break;
+        case SYSCALL: syscall(registers, PC); break;
+        case INVALID_INSTRUCTION: break;
     }
 }
 
@@ -308,17 +320,19 @@ static void lui(int registers[NUM_REGISTERS], Instruction i) {
     registers[i.t] = i.imm << 16;
 }
 static void syscall(int registers[NUM_REGISTERS], int *PC) {
+    // Get syscall request and argument from registers
     int request = registers[SYSCALL_REQUEST_REGISTER];
     int arg = registers[SYSCALL_ARG_REGISTER];
 
     if (request == SYSCALL_PRINT_INT) {
         printf("%d", arg);
-    } else if (request == SYSCALL_EXIT) {
-        *PC = MAX_NUM_INSTRUCTIONS;
     } else if (request == SYSCALL_PRINT_CHAR) {
         putchar(arg);
     } else {
-        printf("Unknown system call: %d\n", request);
+        if (request == SYSCALL_EXIT) {
+            printf("Unknown system call: %d\n", request);
+        }
+
         // Set program counter past number of instructions so not more
         // instructions are run.
         *PC = MAX_NUM_INSTRUCTIONS;
@@ -335,55 +349,55 @@ static void printInstruction(Instruction i, int instructionNum) {
 
     // Print MIPS Instruction
     switch (i.id) {
-    case  ADD: printf("add  "); break;
-    case  SUB: printf("sub  "); break;
-    case  AND: printf("and  "); break;
-    case   OR: printf("or   "); break;
-    case  SLT: printf("slt  "); break;
-    case  MUL: printf("mul  "); break;
-    case  BEQ: printf("beq  "); break;
-    case  BNE: printf("bne  "); break;
-    case ADDI: printf("addi "); break;
-    case SLTI: printf("alti "); break;
-    case ANDI: printf("andi "); break;
-    case  ORI: printf("ori  "); break;
-    case  LUI: printf("lui  "); break;
-    case SYSCALL: printf("syscall"); break;
-    case INVALID_INSTRUCTION: exit(EXIT_FAILURE);
+        case  ADD: printf("add  "); break;
+        case  SUB: printf("sub  "); break;
+        case  AND: printf("and  "); break;
+        case   OR: printf("or   "); break;
+        case  SLT: printf("slt  "); break;
+        case  MUL: printf("mul  "); break;
+        case  BEQ: printf("beq  "); break;
+        case  BNE: printf("bne  "); break;
+        case ADDI: printf("addi "); break;
+        case SLTI: printf("alti "); break;
+        case ANDI: printf("andi "); break;
+        case  ORI: printf("ori  "); break;
+        case  LUI: printf("lui  "); break;
+        case SYSCALL: printf("syscall"); break;
+        case INVALID_INSTRUCTION: exit(EXIT_FAILURE);
     }
 
     // Print registers / immediate
     switch (i.id) {
-    case ADD:   // $d, $s, $t
-    case SUB:
-    case AND:
-    case OR:
-    case SLT:
-    case MUL:
-        printf("$%d, $%d, $%d", i.d, i.s, i.t);
-        break;
+        case ADD:   // $d, $s, $t
+        case SUB:
+        case AND:
+        case OR:
+        case SLT:
+        case MUL:
+            printf("$%d, $%d, $%d", i.d, i.s, i.t);
+            break;
 
-    case BEQ:   // $s, $t, Imm
-    case BNE:
-        printf("$%d, $%d, %d", i.s, i.t, i.imm);
-        break;
+        case BEQ:   // $s, $t, Imm
+        case BNE:
+            printf("$%d, $%d, %d", i.s, i.t, i.imm);
+            break;
 
-    case ADDI:  // $t, $s, Imm
-    case SLTI:
-    case ANDI:
-    case ORI:
-        printf("$%d, $%d, %d", i.t, i.s, i.imm);
-        break;
+        case ADDI:  // $t, $s, Imm
+        case SLTI:
+        case ANDI:
+        case ORI:
+            printf("$%d, $%d, %d", i.t, i.s, i.imm);
+            break;
 
-    case LUI:   // $t, Imm
-        printf("$%d, %d", i.t, i.imm);
-        break;
+        case LUI:   // $t, Imm
+            printf("$%d, %d", i.t, i.imm);
+            break;
 
-    // No register / immediate printed
-    case SYSCALL:
-        break;
-    case INVALID_INSTRUCTION:
-        break;
+        // No register / immediate printed
+        case SYSCALL:
+            break;
+        case INVALID_INSTRUCTION:
+            break;
     }
 
     putchar('\n');
