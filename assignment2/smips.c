@@ -85,19 +85,6 @@ static Immediate bitsToImmediate(uint32_t bits);
 ///////////////////////
 // Running Instructions
 static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC);
-static void add(int registers[NUM_REGISTERS], Instruction i);
-static void sub(int registers[NUM_REGISTERS], Instruction i);
-static void and(int registers[NUM_REGISTERS], Instruction i);
-static void or(int registers[NUM_REGISTERS], Instruction i);
-static void slt(int registers[NUM_REGISTERS], Instruction i);
-static void mul(int registers[NUM_REGISTERS], Instruction i);
-static void beq(int registers[NUM_REGISTERS], Instruction i, int *PC);
-static void bne(int registers[NUM_REGISTERS], Instruction i, int *PC);
-static void addi(int registers[NUM_REGISTERS], Instruction i);
-static void slti(int registers[NUM_REGISTERS], Instruction i);
-static void andi(int registers[NUM_REGISTERS], Instruction i);
-static void ori(int registers[NUM_REGISTERS], Instruction i);
-static void lui(int registers[NUM_REGISTERS], Instruction i);
 static void syscall(int registers[NUM_REGISTERS], int *PC);
 
 ////////////////////////
@@ -229,23 +216,23 @@ static InstructionId bitsToInstructionId(uint32_t bits) {
 static RegisterId bitsToRegisterId(uint32_t bits, RegisterName r) {
     int offset = 0;
     switch (r) {
-    case REGISTER_S:
-        offset = 21;
-        break;
-    case REGISTER_T:
-        offset = 16;
-        break;
-    case REGISTER_D:
-        offset = 11;
-        break;
+        case REGISTER_S:
+            offset = 21;
+            break;
+        case REGISTER_T:
+            offset = 16;
+            break;
+        case REGISTER_D:
+            offset = 11;
+            break;
     }
     uint32_t mask = 0x1F << offset;
-    RegisterId res = (bits & mask) >> offset;
-    return res;
+    return (bits & mask) >> offset;
 }
 
 // Extract the immediate from the instruction's bits.
 static Immediate bitsToImmediate(uint32_t bits) {
+    // Get the last 16 bits
     return (Immediate)(bits & 0xFFFF);
 }
 
@@ -255,70 +242,61 @@ static Immediate bitsToImmediate(uint32_t bits) {
 // Runs the given instruction, modifying the registers and program
 // counter as required.
 static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC) {
-    // Do nothing if the register being set is register 0
+    // Do nothing if the register being set is register $0
     if (
         (i.id >= ADD && i.id <= MUL && i.d == ZERO_REGISTER) ||
         (i.id >= ADDI && i.id <= LUI && i.t == ZERO_REGISTER)
     ) return;
 
     switch (i.id) {
-        case ADD:  add(registers, i); break;
-        case SUB:  sub(registers, i); break;
-        case AND:  and(registers, i); break;
-        case OR:   or(registers, i); break;
-        case SLT:  slt(registers, i); break;
-        case MUL:  mul(registers, i); break;
-        case BEQ:  beq(registers, i, PC); break;
-        case BNE:  bne(registers, i, PC); break;
-        case ADDI: addi(registers, i); break;
-        case SLTI: slti(registers, i); break;
-        case ANDI: andi(registers, i); break;
-        case ORI:  ori(registers, i); break;
-        case LUI:  lui(registers, i); break;
-        case SYSCALL: syscall(registers, PC); break;
-        case INVALID_INSTRUCTION: break;
+        case ADD:
+            registers[i.d] = registers[i.s] + registers[i.t];
+            break;
+        case SUB:
+            registers[i.d] = registers[i.s] - registers[i.t];
+            break;
+        case AND:
+            registers[i.d] = registers[i.s] & registers[i.t];
+            break;
+        case OR:
+            registers[i.d] = registers[i.s] | registers[i.t];
+            break;
+        case SLT:
+            registers[i.d] = registers[i.s] < registers[i.t];
+            break;
+        case MUL:
+            registers[i.d] = registers[i.s] * registers[i.t];
+            break;
+        case BEQ:
+            if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
+            break;
+        case BNE:
+            if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
+            break;
+        case ADDI:
+            registers[i.t] = registers[i.s] + i.imm;
+            break;
+        case SLTI:
+            registers[i.t] = registers[i.s] + i.imm;
+            break;
+        case ANDI:
+            registers[i.t] = registers[i.s] + i.imm;
+            break;
+        case ORI:
+            registers[i.t] = registers[i.s] + i.imm;
+            break;
+        case LUI:
+            registers[i.t] = registers[i.s] + i.imm;
+            break;
+        case SYSCALL:
+            syscall(registers, PC);
+            break;
+        default:
+            break;
     }
 }
 
-static void add(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] + registers[i.t];
-}
-static void sub(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] - registers[i.t];
-}
-static void and(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] & registers[i.t];
-}
-static void or(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] | registers[i.t];
-}
-static void slt(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] < registers[i.t];
-}
-static void mul(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.d] = registers[i.s] * registers[i.t];
-}
-static void beq(int registers[NUM_REGISTERS], Instruction i, int *PC) {
-    if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
-}
-static void bne(int registers[NUM_REGISTERS], Instruction i, int *PC) {
-    if (registers[i.s] != registers[i.t]) *PC += i.imm - 1;
-}
-static void addi(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.t] = registers[i.s] + i.imm;
-}
-static void slti(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.t] = registers[i.s] < i.imm;
-}
-static void andi(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.t] = registers[i.s] & i.imm;
-}
-static void ori(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.t] = registers[i.s] | i.imm;
-}
-static void lui(int registers[NUM_REGISTERS], Instruction i) {
-    registers[i.t] = i.imm << 16;
-}
+// Handle System call
 static void syscall(int registers[NUM_REGISTERS], int *PC) {
     // Get syscall request and argument from registers
     int request = registers[SYSCALL_REQUEST_REGISTER];
@@ -333,7 +311,7 @@ static void syscall(int registers[NUM_REGISTERS], int *PC) {
             printf("Unknown system call: %d\n", request);
         }
 
-        // Set program counter past number of instructions so not more
+        // Set program counter past number of instructions so no more
         // instructions are run.
         *PC = MAX_NUM_INSTRUCTIONS;
     }
@@ -393,11 +371,13 @@ static void printInstruction(Instruction i, int instructionNum) {
             printf("$%d, %d", i.t, i.imm);
             break;
 
-        // No register / immediate printed
+        // No register and/or immediate printed
         case SYSCALL:
             break;
         case INVALID_INSTRUCTION:
             break;
+        // default:
+        //     break;
     }
 
     putchar('\n');
