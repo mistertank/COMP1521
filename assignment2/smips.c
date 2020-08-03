@@ -264,22 +264,22 @@ static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC)
             if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
             break;
         case BNE:
-            if (registers[i.s] == registers[i.t]) *PC += i.imm - 1;
+            if (registers[i.s] != registers[i.t]) *PC += i.imm - 1;
             break;
         case ADDI:
             registers[i.t] = registers[i.s] + i.imm;
             break;
         case SLTI:
-            registers[i.t] = registers[i.s] + i.imm;
+            registers[i.t] = registers[i.s] < i.imm;
             break;
         case ANDI:
-            registers[i.t] = registers[i.s] + i.imm;
+            registers[i.t] = registers[i.s] & i.imm;
             break;
         case ORI:
-            registers[i.t] = registers[i.s] + i.imm;
+            registers[i.t] = registers[i.s] | i.imm;
             break;
         case LUI:
-            registers[i.t] = registers[i.s] + i.imm;
+            registers[i.t] = i.imm << 16;
             break;
         case SYSCALL:
             doSyscall(registers, PC);
