@@ -19,8 +19,6 @@ typedef int16_t Immediate;
 // Registers
 typedef uint8_t RegisterId;
 
-#define MIN_REGISTER ((RegisterId) 0)
-#define MAX_REGISTER ((RegisterId) 31)
 #define NUM_REGISTERS 32
 #define ZERO_REGISTER ((RegisterId) 0)
 
@@ -53,16 +51,11 @@ typedef enum instructionId {
     INVALID_INSTRUCTION = -1
 } InstructionId;
 
-#define MIN_INSTRUCTION ((InstructionId) ADD)
-#define MAX_INSTRUCTION ((InstructionId) SYSCALL)
-
 typedef struct instruction {
     InstructionId   id;
     RegisterId      s, t, d;
     Immediate       imm;
 } Instruction;
-
-#define LEN_HEX_INSTRUCTION 32
 
 #define MAX_NUM_INSTRUCTIONS 1000
 
@@ -85,10 +78,10 @@ static Immediate bitsToImmediate(uint32_t bits);
 ///////////////////////
 // Running Instructions
 static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC);
-static void syscall(int registers[NUM_REGISTERS], int *PC);
+static void doSyscall(int registers[NUM_REGISTERS], int *PC);
 
 ////////////////////////
-// Decoding Instructions
+// Printing Instructions
 static void printInstruction(Instruction i, int instructionNum);
 
 ////////////////////////////////////////////////////////////////////////
@@ -123,8 +116,8 @@ int main(int argc, char *argv[]) {
         // Exit if the instruction is invalid
         if (new.id == INVALID_INSTRUCTION) {
             fprintf(
-                stderr, "%s:%d: invalid instruction code: %d\n",
-                filename, nInstructions, instructionBits
+                stderr, "%s:%d: invalid instruction code: %08x\n",
+                filename, nInstructions + 1, instructionBits
             );
             exit(EXIT_FAILURE);
         }
@@ -289,7 +282,7 @@ static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC)
             registers[i.t] = registers[i.s] + i.imm;
             break;
         case SYSCALL:
-            syscall(registers, PC);
+            doSyscall(registers, PC);
             break;
         default:
             break;
@@ -297,7 +290,7 @@ static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC)
 }
 
 // Handle System call
-static void syscall(int registers[NUM_REGISTERS], int *PC) {
+static void doSyscall(int registers[NUM_REGISTERS], int *PC) {
     // Get syscall request and argument from registers
     int request = registers[SYSCALL_REQUEST_REGISTER];
     int arg = registers[SYSCALL_ARG_REGISTER];
@@ -305,7 +298,8 @@ static void syscall(int registers[NUM_REGISTERS], int *PC) {
     if (request == SYSCALL_PRINT_INT) {
         printf("%d", arg);
     } else if (request == SYSCALL_PRINT_CHAR) {
-        putchar(arg);
+        // print out low byte
+        putchar(arg & 0xFF);
     } else {
         if (request != SYSCALL_EXIT) {
             printf("Unknown system call: %d\n", request);
