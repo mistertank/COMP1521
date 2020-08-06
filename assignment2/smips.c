@@ -279,7 +279,7 @@ static void runInstruction(int registers[NUM_REGISTERS], Instruction i, int *PC)
             registers[i.t] = registers[i.s] | i.imm;
             break;
         case LUI:
-            registers[i.t] = i.imm << 16;
+            registers[i.t] = ((uint32_t)i.imm) << 16;
             break;
         case SYSCALL:
             doSyscall(registers, PC);
