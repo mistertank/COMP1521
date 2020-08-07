@@ -43,6 +43,8 @@ void lru(int n_physical_pages, int n_virtual_pages) {
         assert(virtual_page >= 0 && virtual_page < n_virtual_pages);
         access_page(virtual_page, access_time, n_physical_pages, ipt);
     }
+
+    free(ipt);
 }
 
 
@@ -66,5 +68,50 @@ void access_page(int virtual_page, int access_time, int n_physical_pages, struct
     //
     // don't forgot to update the last_access_time of the virtual_page
 
-    printf("Time %d: virtual page %d accessed\n", access_time, virtual_page);
+    // Virtual page is already in a physical page
+    for (int i = 0; i < n_physical_pages; i++) {
+        if (ipt[i].virtual_page == virtual_page) {
+            ipt[i].virtual_page = virtual_page;
+            ipt[i].last_access_time = access_time;
+            printf(
+                "Time %d: virtual page %d -> physical page %d\n",
+                access_time, virtual_page, i
+            );
+            return;
+        }
+    }
+
+    // Virtual page is not in a physical page and there is a
+    // free physical page
+    for (int i = 0; i < n_physical_pages; i++) {
+        if (ipt[i].virtual_page == -1) {
+            ipt[i].virtual_page = virtual_page;
+            ipt[i].last_access_time = access_time;
+            printf(
+                "Time %d: virtual page %d loaded to physical page %d\n",
+                access_time, virtual_page, i
+            );
+            return;
+        }
+    }
+
+    // Virtual page is not in a physical page and there is
+    // no free physical page
+    int minIndex = 0;
+    int minTime = ipt[0].last_access_time;
+    for (int i = 0; i < n_physical_pages; i++) {
+        if (ipt[i].last_access_time < minTime) {
+            minIndex = i;
+            minTime = ipt[i].last_access_time;
+        }
+    }
+
+    int evictedPage = ipt[minIndex].virtual_page;
+    ipt[minIndex].virtual_page = virtual_page;
+    ipt[minIndex].last_access_time = access_time;
+
+    printf(
+        "Time %d: virtual page %d  - virtual page %d evicted - loaded to physical page %d\n",
+        access_time, virtual_page, evictedPage, minIndex
+    );
 }
