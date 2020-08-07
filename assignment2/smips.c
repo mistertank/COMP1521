@@ -339,12 +339,16 @@ static void printInstruction(Instruction i, int instructionNum) {
     }
 
     if (i.id >= ADD && i.id <= MUL) {
+        // instruction $d, $s, $t
         printf("$%d, $%d, $%d", i.d, i.s, i.t);
     } else if (i.id == BEQ || i.id == BNE) {
+        // instruction $s, $t, Imm
         printf("$%d, $%d, %d", i.s, i.t, i.imm);
     } else if (i.id >= ADDI && i.id <= ORI) {
+        // instruction $t, $s, Imm
         printf("$%d, $%d, %d", i.t, i.s, i.imm);
     } else if (i.id == LUI) {
+        // instruction $t, Imm
         printf("$%d, %d", i.t, i.imm);
     }
 
