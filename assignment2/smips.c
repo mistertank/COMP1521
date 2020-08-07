@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     // Check number of arguments
     if (argc != 2) {
         fprintf(stderr, "usage: %s [FILENAME]\n", argv[0]);
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     // Open file
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     FILE *in = fopen(filename, "r");
     if (in == NULL) {
         perror(filename);
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     // Create array of instruciton
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
                 stderr, "%s:%d: invalid instruction code: %08x\n",
                 filename, nInstructions + 1, instructionBits
             );
-            exit(EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         instructions[nInstructions] = new;
@@ -338,40 +338,14 @@ static void printInstruction(Instruction i, int instructionNum) {
         case INVALID_INSTRUCTION: exit(EXIT_FAILURE);
     }
 
-    // Print registers / immediate
-    switch (i.id) {
-        case ADD:   // $d, $s, $t
-        case SUB:
-        case AND:
-        case OR:
-        case SLT:
-        case MUL:
-            printf("$%d, $%d, $%d", i.d, i.s, i.t);
-            break;
-
-        case BEQ:   // $s, $t, Imm
-        case BNE:
-            printf("$%d, $%d, %d", i.s, i.t, i.imm);
-            break;
-
-        case ADDI:  // $t, $s, Imm
-        case SLTI:
-        case ANDI:
-        case ORI:
-            printf("$%d, $%d, %d", i.t, i.s, i.imm);
-            break;
-
-        case LUI:   // $t, Imm
-            printf("$%d, %d", i.t, i.imm);
-            break;
-
-        // No register and/or immediate printed
-        case SYSCALL:
-            break;
-        case INVALID_INSTRUCTION:
-            break;
-        // default:
-        //     break;
+    if (i.id >= ADD && i.id <= MUL) {
+        printf("$%d, $%d, $%d", i.d, i.s, i.t);
+    } else if (i.id == BEQ || i.id == BNE) {
+        printf("$%d, $%d, %d", i.s, i.t, i.imm);
+    } else if (i.id >= ADDI && i.id <= ORI) {
+        printf("$%d, $%d, %d", i.t, i.s, i.imm);
+    } else if (i.id == LUI) {
+        printf("$%d, %d", i.t, i.imm);
     }
 
     putchar('\n');
