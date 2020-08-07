@@ -1,3 +1,3 @@
-EXERCISES	+= non_ascii
-CLEAN_FILES	+= non_ascii non_ascii.o
-non_ascii:	non_ascii.c
+EXERCISES	+= page_table
+CLEAN_FILES	+= page_table page_table.o
+page_table:	page_table.c
