@@ -61,14 +61,14 @@ int main(int argc, char *argv[]) {
         } else if (numBytesInChar < 4) {
             numBytesInChar++;
         } else {
-            fprintf(stderr, "%s: invalid UTF-8 after %d valid UTF-8 characters\n", filename, utfCount);
-            return 1;
+            printf("%s: invalid UTF-8 after %d valid UTF-8 characters\n", filename, utfCount);
+            return 0;
         }
     }
 
     if (c == EOF && currChar) {
-        fprintf(stderr, "%s: invalid UTF-8 after %d valid UTF-8 characters\n", filename, utfCount);
-        return 1;
+        printf("%s: invalid UTF-8 after %d valid UTF-8 characters\n", filename, utfCount);
+        return 0;
     }
 
     printf("%s: %d UTF-8 characters\n", filename, utfCount);
