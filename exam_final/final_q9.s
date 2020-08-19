@@ -15,7 +15,6 @@ main:
     jal expression
 
     move    $a0, $v0
-    # li   $a0, 42         # printf("%d", 42);
     li   $v0, 1
     syscall
 
@@ -37,13 +36,12 @@ expression_init:
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
 
-    li   $a0, 1
-    li   $v0, 1
-    syscall
-
-    li   $a0, '\n'       # printf("%c", '\n');
-    li   $v0, 11
-    syscall
+    # li   $a0, 1
+    # li   $v0, 1
+    # syscall
+    # li   $a0, '\n'       # printf("%c", '\n');
+    # li   $v0, 11
+    # syscall
 
 expression_body:
     jal     term            # left = term()
@@ -52,6 +50,10 @@ expression_body:
     lb      $t1, ($s7)
     beq     $t1, '+', expression_is_add_end
 expression_is_add:
+    lw      $s1, 8($sp)
+    lw      $s0, 4($sp)
+    lw      $ra, ($sp)
+    add     $sp, $sp, 12
     move    $v0, $s0        # return left;
     jr      $ra
 
@@ -80,28 +82,25 @@ term_init:
     sw      $s0, 4($sp)
     sw      $s1, 8($sp)
 
-    li   $a0, 2
-    li   $v0, 1
-    syscall
-
-    li   $a0, '\n'       # printf("%c", '\n');
-    li   $v0, 11
-    syscall
+    # li   $a0, 2
+    # li   $v0, 1
+    # syscall
+    # li   $a0, '\n'       # printf("%c", '\n');
+    # li   $v0, 11
+    # syscall
 
 term_body:
     jal     number          # left = number()
     move    $s0, $v0
 
-    li   $a0, 4
-    li   $v0, 1
-    syscall
-    li   $a0, '\n'       # printf("%c", '\n');
-    li   $v0, 11
-    syscall
-
     lb      $t1, ($s7)
     beq     $t1, '*', term_is_mul_end
 term_is_mul:
+
+    lw      $s1, 8($sp)
+    lw      $s0, 4($sp)
+    lw      $ra, ($sp)
+    add     $sp, $sp, 12
     move    $v0, $s0        # return left;
     jr      $ra
 
