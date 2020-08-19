@@ -1,1 +1,14 @@
-/web/cs1521/20T2/activities/final_q4/files.ln/final_q4.c
+//  read numbers until their sum is >= 42, print their sum
+
+#include <stdio.h>
+
+int main(void) {
+    int sum = 0;
+    while (sum < 42) {
+        int x;
+        scanf("%d", &x);
+        sum += x;
+    }
+    printf("%d\n", sum);
+    return 0;
+}

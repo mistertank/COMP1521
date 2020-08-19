@@ -1,1 +1,13 @@
-/web/cs1521/20T2/activities/final_q1/files.ln/final_q1.c
+// print the sum of two integers
+
+#include <stdio.h>
+
+int main(void) {
+    int x, y;
+
+    scanf("%d", &x);
+    scanf("%d", &y);
+    printf("%d\n", x + y);
+
+    return 0;
+}

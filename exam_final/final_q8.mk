@@ -1,1 +1,3 @@
-/web/cs1521/20T2/activities/final_q8/files.ln/final_q8.mk
+EXERCISES	+= final_q8
+CLEAN_FILES	+= final_q8 final_q8.o
+final_q8:	final_q8.c
