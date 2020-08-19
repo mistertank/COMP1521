@@ -3,10 +3,19 @@
 # and then print their sum
 
 main:
+    li   $s0, 0
+
+loop:
+    bge  $s0, 42 loop_end
     li   $v0, 5        #   scanf("%d", &x);
     syscall            #
+    move $t0, $v0
 
-    move $a0, $v0      #   printf("%d\n", x);
+    add  $s0, $s0, $t0 # add to sum
+    b loop
+
+loop_end:
+    move $a0, $s0      #   printf("%d\n", x);
     li   $v0, 1
     syscall
 
