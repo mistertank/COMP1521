@@ -5,8 +5,13 @@
 main:
     li   $v0, 5        #   scanf("%d", &x);
     syscall            #
+    move $t0, $v0
 
-    move $a0, $v0      #   printf("%d\n", x);
+    li   $v0, 5        #   scanf("%d", &y);
+    syscall            #
+    move $t1, $v0
+
+    add  $a0, $t0, $t1 #   printf("%d", x + y);
     li   $v0, 1
     syscall
 
