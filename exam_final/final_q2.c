@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 // given a uint32_t value,
 // return 1 iff the least significant (bottom) byte
