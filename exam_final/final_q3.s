@@ -7,9 +7,23 @@
 main:
     li   $v0, 5
     syscall
+    move $s0, $v0                   # input
 
-    # PUT YOUR CODE HERE
+    and  $t0, $s0, 255              # lowestByte = input & 0xFF
 
+    and  $t1, $s0, 0xFF00           # secondLowestByte = (input & 0xFF00) >> 8
+    srl  $t2, $t1, 8                #
+
+    bne  $t0, $t2, if_match_else
+
+if_match:
+    li   $a0, 1
+    b print
+
+if_match_else:
+    li   $a0, 0
+
+print:
     li   $v0, 1
     syscall
 
