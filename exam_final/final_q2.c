@@ -10,6 +10,5 @@
 int final_q2(uint32_t value) {
     uint32_t lowestByte = value & 0xFF;
     uint32_t secondLowestByte = (value & 0xFF00) >> 8;
-    printf("%x %x\n", lowestByte, secondLowestByte);
     return lowestByte == secondLowestByte;
 }
